@@ -146,6 +146,11 @@
        font-family:var(--body); font-size:13px; line-height:1.5; border:2px solid #3a2716; }
   pre .c{ color:#e6763b; } pre .s{ color:#9fd6a3; }
   .note{ text-align:center; color:var(--dim); font-size:13px; margin-top:22px; }
+  .plugcard{ background:linear-gradient(135deg,#fff3e6,#fdeede); border:3px solid var(--edge); border-radius:16px; box-shadow:var(--sh); padding:22px 24px; max-width:760px; margin:0 auto 6px; }
+  .plugcard .plugtag{ font-family:'Silk',monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--edge); margin-bottom:12px; }
+  .plugcard pre{ margin:0 0 12px; }
+  .plugcard p{ margin:0; font-size:14px; color:var(--ink2); }
+  .orline{ text-align:center; font-family:'Silk',monospace; font-size:12px; color:var(--dim); letter-spacing:2px; text-transform:uppercase; margin:26px 0 20px; }
 
   /* ---------- multiplayer banner ---------- */
   .mp{ background:linear-gradient(120deg,#eaf6fb,#f3ffe9); border:3px solid var(--edge); border-radius:18px;
@@ -298,8 +303,15 @@
     <div class="sec-head">
       <p class="eyebrow">quick start</p>
       <h2>Get it running</h2>
-      <p>Claudemon plugs into Claude Code, so that's the one thing you need. Setup is a single command — no paths to edit, no Docker, no account, no config files to touch. Plain Node (≥ 24) on Windows, macOS, or Linux.</p>
+      <p>Claudemon plugs into Claude Code, so that's the one thing you need. The easiest way in is to install it as a plugin, right inside Claude Code.</p>
     </div>
+    <div class="plugcard">
+      <div class="plugtag">🔌 install as a Claude Code plugin — the easy way</div>
+      <pre><span class="c">/plugin</span> marketplace add OriginalName457/claudemon
+<span class="c">/plugin</span> install claudemon@claudemon-plugins</pre>
+      <p>Run those two inside Claude Code. The MCP server registers and starts on its own — no paths, no config, no restart. Then just say <b>“launch Claudemon.”</b> 🎮</p>
+    </div>
+    <p class="orline">— or set it up yourself —</p>
     <div class="steps">
       <div class="step">
         <div class="n">1</div>

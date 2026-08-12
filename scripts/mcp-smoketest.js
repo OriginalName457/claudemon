@@ -48,14 +48,14 @@ function notify(method, params) {
   for (const action of ['get_status', 'feed', 'water', 'pet', 'work', 'work', 'play', 'get_status']) {
     const r = await rpc('tools/call', { name: action, arguments: {} });
     const sc = r.result.structuredContent;
-    console.log(`✓ ${action.padEnd(11)} -> ${sc.emoji} ${sc.formName} stage${sc.stage} xp${sc.xp} care${sc.care} | ${sc.mood}`);
+    console.log(`✓ ${action.padEnd(11)} -> ${sc.emoji} ${String(sc.name || '?').padEnd(9)} wellbeing ${String(sc.wellbeing).padStart(3)} · ${sc.mood}`);
   }
 
   // Force evolution by hammering work + care
   for (let i = 0; i < 30; i++) { await rpc('tools/call', { name: 'work', arguments: {} }); await rpc('tools/call', { name: 'pet', arguments: {} }); }
   const final = await rpc('tools/call', { name: 'get_status', arguments: {} });
   const f = final.result.structuredContent;
-  console.log(`\n✓ after heavy care+work: ${f.emoji} ${f.name} the ${f.formName} (stage ${f.stage}/4) xp=${f.xp} care=${f.care}`);
+  console.log(`\n✓ after heavy care+work: ${f.emoji} ${f.name} · wellbeing ${f.wellbeing} · bond ${f.bond} · ${f.mood}`);
   console.log('  text render:\n' + final.result.content[0].text.split('\n').map(l => '    ' + l).join('\n'));
 
   child.kill();

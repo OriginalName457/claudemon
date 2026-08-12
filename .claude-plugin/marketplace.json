@@ -1,0 +1,12 @@
+{
+  "name": "claudemon-plugins",
+  "owner": { "name": "OriginalName457", "url": "https://github.com/OriginalName457" },
+  "plugins": [
+    {
+      "name": "claudemon",
+      "source": "./",
+      "description": "A friendlier way to run Claude Code agents — pixel creatures you can watch work, plus a game.",
+      "version": "1.0.0"
+    }
+  ]
+}

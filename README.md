@@ -43,15 +43,29 @@ It plugs into Claude Code (that's the one requirement). Free and open source. A 
 
 ## Quick start
 
-Claudemon plugs into **Claude Code** — that's the one thing you need. Then it's one command: no paths
-to edit, no `settings.json` to touch, no Docker, no account. Plain Node (≥ 24) on Windows, macOS, or Linux.
+Claudemon plugs into **Claude Code** — that's really the only thing you need (plus Node ≥ 24). Pick whichever's easiest:
 
+### 🔌 Install as a plugin (easiest)
+Run these two **inside Claude Code**:
+```
+/plugin marketplace add OriginalName457/claudemon
+/plugin install claudemon@claudemon-plugins
+```
+The MCP server registers and starts automatically — no paths, no config editing, no restart. Then say **“launch Claudemon.”** 🎮
+
+### 🗣️ Just ask Claude
+Already in Claude Code? Paste this and it installs itself — no terminal wrangling:
+
+> **Install Claudemon from github.com/OriginalName457/claudemon — clone it, run `npm run setup` inside, then tell me to restart.**
+
+When it says so, restart Claude Code and say **“launch Claudemon.”** It'll open your handheld and offer to drop a desktop shortcut. 🎮
+
+### ⌨️ Or run it yourself
 ```bash
 git clone https://github.com/OriginalName457/claudemon
 cd claudemon
-npm run setup        # installs the Claude CLI if missing, then registers Claudemon for you
+npm run setup        # auto-detects the path + installs the Claude CLI if missing
 ```
-
 Restart Claude Code and say **“show Clawde.”** Your tank opens at <http://localhost:4573>. That's it.
 
 - **Want the pixel pet in your terminal statusline too?**  `npm run setup -- --statusline`

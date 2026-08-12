@@ -211,9 +211,11 @@ function voiceLine(s) {
   if (v.energy < 25) needs.push('a nap');
   if (v.happiness < 30) needs.push('some attention');
   const m = mood(s);
-  if (needs.length) return `${s.name} is ${m} — could really use ${needs[0]}.`;
-  if (wellbeing(s) > 80) return `${s.name} is thriving and happy to be here.`;
-  return `${s.name} is doing okay.`;
+  const main = mainId(s), sp = species.get(main) || {};
+  const nm = (main === s.starter ? (s.name || sp.name) : sp.name) || 'your Claudemon';
+  if (needs.length) return `${nm} is ${m}, could really use ${needs[0]}.`;
+  if (wellbeing(s) > 80) return `${nm} is thriving and happy to be here.`;
+  return `${nm} is doing okay.`;
 }
 
 // ---- Tank residency: main creature + who shares each biome's tank ----------
