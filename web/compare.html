@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Claudemon — PixelLab vs Recraft</title>
+<style>
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:#eaf0ff;
+    font-family:"Courier New",monospace;min-height:100vh;padding:24px 16px 50px;}
+  h1{text-align:center;letter-spacing:4px;color:#3ac0a0;margin:4px 0;font-size:24px;}
+  .sub{text-align:center;color:#8fa0cf;font-size:13px;margin-bottom:24px;}
+  .grid{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;max-width:1000px;margin:0 auto;}
+  .card{background:linear-gradient(180deg,#131a36,#0e1430);border:2px solid #26305a;border-bottom-width:5px;
+    border-radius:16px;padding:18px;width:420px;text-align:center;}
+  .card h2{margin:0 0 2px;font-size:18px;}
+  .tag{font-size:11px;letter-spacing:1px;padding:3px 10px;border-radius:10px;display:inline-block;margin-bottom:12px;}
+  .good{background:#0e2a1c;color:#56d364;} .warn{background:#2a2410;color:#f2c94c;}
+  .stage{height:280px;display:flex;align-items:center;justify-content:center;background:#08122b;
+    border:2px solid #1d2748;border-radius:10px;position:relative;overflow:hidden;}
+  .floor{position:absolute;bottom:0;left:0;right:0;height:14px;background:#241b3a;}
+  img.pix{image-rendering:pixelated;}
+  .walk{width:230px;height:230px;position:relative;z-index:2;animation:stroll 5s ease-in-out infinite;}
+  @keyframes stroll{0%{transform:translateX(-70px) scaleX(1)}46%{transform:translateX(70px) scaleX(1)}
+    50%{transform:translateX(70px) scaleX(-1)}96%{transform:translateX(-70px) scaleX(-1)}100%{transform:translateX(-70px) scaleX(1)}}
+  .recraft{width:250px;height:250px;object-fit:contain;animation:bob 1.8s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .dirs{display:flex;gap:8px;justify-content:center;margin-top:12px;}
+  .dirs img{width:56px;height:56px;image-rendering:pixelated;background:#0e1430;border:1px solid #26305a;border-radius:6px;}
+  .note{font-size:12px;color:#8fa0cf;line-height:1.5;margin-top:12px;min-height:60px;}
+  .verdict{max-width:900px;margin:26px auto 0;text-align:center;color:#c7d0f0;font-size:13px;line-height:1.6;
+    background:#131a36;border:1px solid #26305a;border-radius:12px;padding:16px;}
+</style>
+</head>
+<body>
+  <h1>PIXELLAB vs RECRAFT</h1>
+  <div class="sub">same creature, two pipelines — this is the choice before we commit</div>
+  <div class="grid">
+    <div class="card">
+      <h2>🦀 PixelLab</h2>
+      <div><span class="tag good">CONSISTENT · REAL ANIMATION · 1 gen each</span></div>
+      <div class="stage"><div class="floor"></div>
+        <canvas id="walk" class="walk pix" width="64" height="64"></canvas>
+      </div>
+      <div class="dirs">
+        <img class="pix" src="/assets/_pixellab/clawde/south.png?v=1" title="front">
+        <img class="pix" src="/assets/_pixellab/clawde/east.png?v=1" title="side">
+        <img class="pix" src="/assets/_pixellab/clawde/west.png?v=1" title="side">
+        <img class="pix" src="/assets/_pixellab/clawde/north.png?v=1" title="back">
+      </div>
+      <div class="note">Actually <b>walks</b> (4-frame cycle, real generated frames), gives 4 directions, and every form will share this exact style. Trade-off: lower detail — classic small-sprite pixel art (~64px).</div>
+    </div>
+    <div class="card">
+      <h2>✨ Recraft (current)</h2>
+      <div><span class="tag warn">DETAILED · STATIC · inconsistent line</span></div>
+      <div class="stage"><div class="floor"></div>
+        <img class="recraft" src="/assets/clawde.png?v=1">
+      </div>
+      <div class="dirs" style="opacity:.5">
+        <span style="font-size:11px;color:#8fa0cf;align-self:center">one pose only · no directions · no frames</span>
+      </div>
+      <div class="note">Gorgeous chunky detail (the one you loved), but it's a <b>single static pose</b>, only faked motion, and each evolution drifts in style.</div>
+    </div>
+  </div>
+  <div class="verdict">
+    <b>The call:</b> PixelLab = a cohesive line that truly animates, at lower detail ·
+    Recraft = higher detail, but static & style-inconsistent.<br>
+    Next options: <b>keep PixelLab as-is</b> · <b>push PixelLab detail higher (128px / reference the Recraft look)</b> · <b>go back to Recraft</b>.
+  </div>
+
+<script>
+// real walk-cycle: draw the 4 PixelLab frames onto the canvas in a loop
+const frames=[], N=4; let loaded=0, cur=0;
+const cv=document.getElementById('walk'), cx=cv.getContext('2d'); cx.imageSmoothingEnabled=false;
+for(let i=0;i<N;i++){const im=new Image();im.onload=()=>{loaded++;};im.src=`/assets/_pixellab/clawde_walk/f${i}.png?v=1`;frames.push(im);}
+setInterval(()=>{ if(loaded<N)return; cx.clearRect(0,0,64,64); const f=frames[cur%N];
+  try{cx.drawImage(f,0,0,64,64);}catch(e){} cur++; }, 150);
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Claudemon — Biome Vision Board</title>
+<style>
+  :root{--ink:#eaf0ff;--dim:#8fa0cf;--teal:#3ac0a0;--gold:#ffd23f;--line:#26305a;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#0a1226;color:var(--ink);font-family:"Courier New",monospace;padding:24px 18px 60px;}
+  h1{text-align:center;letter-spacing:6px;color:var(--teal);font-size:26px;margin:2px;}
+  .sub{text-align:center;color:var(--dim);font-size:13px;margin-bottom:8px;}
+  .intro{max-width:900px;margin:14px auto 30px;background:#131a36;border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:13px;line-height:1.6;color:#c7d0f0;}
+  .intro b{color:var(--teal);}
+  .zone{max-width:1000px;margin:0 auto 30px;background:#111830;border:2px solid var(--line);border-radius:16px;overflow:hidden;}
+  .hero{position:relative;height:280px;background:#08122b;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;}
+  .hero img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;}
+  .hero .label{position:absolute;top:12px;left:14px;font-size:20px;letter-spacing:3px;text-shadow:2px 2px 0 #000a;}
+  .hero .walk{position:absolute;bottom:26px;left:0;right:0;border-top:2px dashed rgba(255,255,255,.35);}
+  .hero .walkcap{position:absolute;bottom:8px;left:14px;font-size:10px;color:#fff;text-shadow:1px 1px 0 #000;}
+  .body{padding:16px 18px;}
+  .tag{font-size:11px;color:var(--dim);}
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px;}
+  .tier{background:#0d1430;border:1px solid var(--line);border-radius:10px;padding:11px;}
+  .tier h4{margin:0 0 6px;font-size:12px;color:var(--gold);letter-spacing:1px;}
+  .tier ul{margin:0;padding-left:16px;font-size:11px;color:#c3cdec;line-height:1.55;}
+  .flow{margin-top:10px;font-size:11.5px;color:var(--teal);}
+  @media(max-width:720px){.tiers{grid-template-columns:1fr;}}
+</style></head>
+<body>
+  <h1>BIOME OVERHAUL</h1>
+  <div class="sub">vision board · base tanks &amp; upgrade tiers · nothing built yet — react &amp; steer</div>
+
+  <div class="intro">
+    <b>The idea:</b> each biome becomes a real little scene your creatures live in — a painted pixel background with a clear ground line they walk along, gentle motion (ocean current, drifting pollen, heat shimmer), and layered props you buy in the shop. Tank upgrades don't just make the box bigger — they <b>make the world richer</b>: more life, more depth, more to look at.<br><br>
+    <b>How it renders:</b> a background image per biome + tier → creatures walk the ground line → a light animated flow layer on top → your purchased decorations layered in front. The old code-drawn floor/decor gets fully replaced with real pixel art like the samples below.
+  </div>
+
+  <!-- AQUATIC -->
+  <div class="zone">
+    <div class="hero"><img src="/assets/_bg/aquatic_base.png"><span class="label">🌊 AQUATIC</span><div class="walk"></div><div class="walkcap">creatures walk here (sandy floor)</div></div>
+    <div class="body">
+      <div class="tag">"the little ocean tank" — a calm reef aquarium with real ocean flow</div>
+      <div class="tiers">
+        <div class="tier"><h4>TIER 1 · BASE</h4><ul><li>sandy bottom + soft blue water</li><li>a couple rocks &amp; seaweed at the edges</li><li>gentle light rays from above</li><li>clean, open, a little bare</li></ul></div>
+        <div class="tier"><h4>TIER 2 · BIG TANK</h4><ul><li>coral clusters + anemones</li><li>fish silhouettes drifting in back</li><li>a sunken treasure chest</li><li>brighter caustics</li></ul></div>
+        <div class="tier"><h4>TIER 3 · GRAND</h4><ul><li>shipwreck / kelp forest backdrop</li><li>glowing jellyfish drifting through</li><li>bubbler columns + rich reef</li><li>deep parallax water layers</li></ul></div>
+      </div>
+      <div class="flow">≈ flow: slow horizontal current, rising bubbles, swaying seaweed, moving light caustics</div>
+    </div>
+  </div>
+
+  <!-- VIVARIUM -->
+  <div class="zone">
+    <div class="hero"><img src="/assets/_bg/vivarium_base.png"><span class="label">🌿 VIVARIUM</span><div class="walk"></div><div class="walkcap">creatures walk here (mossy floor)</div></div>
+    <div class="body">
+      <div class="tag">"the terrarium" — a warm, leafy jungle box</div>
+      <div class="tiers">
+        <div class="tier"><h4>TIER 1 · BASE</h4><ul><li>mossy dirt ground</li><li>ferns + trees framing the sides</li><li>hazy green depth behind</li><li>calm, open middle</li></ul></div>
+        <div class="tier"><h4>TIER 2 · BIG</h4><ul><li>fallen log + mushrooms</li><li>hanging vines, a little pond</li><li>flowering shrubs</li><li>fireflies at dusk</li></ul></div>
+        <div class="tier"><h4>TIER 3 · GRAND</h4><ul><li>huge canopy tree</li><li>trickling waterfall + stream</li><li>glowing flowers, butterflies</li><li>sunbeam shafts</li></ul></div>
+      </div>
+      <div class="flow">≈ flow: drifting pollen &amp; leaves, swaying plants, fireflies, dappled light</div>
+    </div>
+  </div>
+
+  <!-- DESERT -->
+  <div class="zone">
+    <div class="hero"><img src="/assets/_bg/desert_base.png"><span class="label">🏜️ DESERT</span><div class="walk"></div><div class="walkcap">creatures walk here (sand floor)</div></div>
+    <div class="body">
+      <div class="tag">"the dune dome" — soft warm desert under a pastel sky</div>
+      <div class="tiers">
+        <div class="tier"><h4>TIER 1 · BASE</h4><ul><li>warm tan sand dunes</li><li>pastel peach sky</li><li>one small distant rock</li><li>quiet and spare (by design)</li></ul></div>
+        <div class="tier"><h4>TIER 2 · BIG</h4><ul><li>cacti + dry shrubs</li><li>a sun-bleached bone or two</li><li>a tiny oasis puddle</li><li>a warm setting sun</li></ul></div>
+        <div class="tier"><h4>TIER 3 · GRAND</h4><ul><li>big sandstone arch</li><li>oasis with palm trees</li><li>starry night option</li><li>layered dune parallax</li></ul></div>
+      </div>
+      <div class="flow">≈ flow: drifting sand motes, heat shimmer near the ground, a slow-moving sun</div>
+    </div>
+  </div>
+
+  <div class="intro" style="text-align:center;">
+    <b>🛒 Shop overhaul too:</b> decorations become real biome-matched pixel props (coral / driftwood for water · mushrooms / logs / vines for vivarium · cacti / bones / arches for desert), and buying tank upgrades swaps in the richer scene. Every zone reads as one cohesive, cozy little world.<br><br>
+    <b>Your move:</b> love it? tweak a zone's vibe? want night versions, or a specific creature's-eye feel? Point me and I'll start building — base scenes first, then the upgrade tiers.
+  </div>
+</body></html>

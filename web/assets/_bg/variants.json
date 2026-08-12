@@ -1,0 +1,24 @@
+{
+  "vivarium": {
+    "default": "original",
+    "variants": {
+      "original": "tank_viv.png",
+      "mossden": "tank_viv_mossden.png",
+      "mushroom": "tank_viv_mushroom.png"
+    }
+  },
+  "desert": {
+    "default": "original",
+    "variants": {
+      "original": "tank_desert.png",
+      "sunset": "tank_desert_sunset.png"
+    }
+  },
+  "aquatic": {
+    "default": "original",
+    "variants": {
+      "original": "tank_aqua_a.png",
+      "deep": "tank_aqua_deep.png"
+    }
+  }
+}

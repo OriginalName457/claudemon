@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Claudemon — draw walk paths</title>
+<style>
+  body{margin:0;background:#0c1226;color:#e8eefc;font-family:"Courier New",monospace;text-align:center;padding:18px 14px 40px;}
+  h1{color:#3ac0a0;letter-spacing:2px;font-size:19px;margin:2px;}
+  .sub{color:#8fa0cf;font-size:12px;max-width:640px;margin:6px auto 16px;line-height:1.55;}
+  .tabs{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;}
+  .tab{background:#131a36;border:2px solid #26305a;color:#cfe0ff;border-radius:10px;padding:8px 14px;font-family:inherit;font-size:13px;cursor:pointer;}
+  .tab.on{border-color:#3ac0a0;color:#3ac0a0;}
+  .wrap{position:relative;display:inline-block;border-radius:10px;overflow:hidden;box-shadow:0 8px 0 #05060f;}
+  canvas{display:block;image-rendering:pixelated;width:560px;height:525px;touch-action:none;cursor:crosshair;background:#08122b;}
+  .bar{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;align-items:center;}
+  button.act{background:#1b2547;border:2px solid #38466f;border-bottom-width:4px;color:#eaf0ff;border-radius:10px;padding:9px 16px;font-family:inherit;font-size:13px;cursor:pointer;}
+  button.save{border-color:#3ac0a0;color:#bff3e3;}
+  button.clear{border-color:#7a3050;color:#f2b8c9;}
+  #status{color:#8fa0cf;font-size:12px;margin-top:10px;min-height:16px;}
+  .hint{color:#c7d0f0;font-size:11.5px;max-width:600px;margin:14px auto 0;background:#131a36;border:1px solid #26305a;border-radius:10px;padding:12px;line-height:1.6;text-align:left;}
+</style></head>
+<body>
+  <h1>🖍️ DRAW WALK PATHS</h1>
+  <div class="sub">Drag on the tank to draw the path your creature strolls along. Draw it going <b>up</b> (into the scene) to make them walk smaller/deeper, and <b>down/forward</b> to bring them big &amp; close. Their middle rides the line like a rail. A live preview walks it as you go.</div>
+  <div class="tabs" id="tabs"></div>
+  <div class="wrap"><canvas id="cv" width="512" height="480"></canvas></div>
+  <div class="bar">
+    <button class="act clear" id="clear">✕ Clear this path</button>
+    <button class="act save" id="save">✓ Save path</button>
+  </div>
+  <div id="status"></div>
+  <div class="hint"><b>Tips:</b> one smooth stroke works best (release to finish). Redraw anytime — a new stroke replaces the old one. Draw a gentle S or an arc so they wander front-to-back like a little rail. Save each biome separately; the tank picks it up on next load.</div>
+
+<script>
+const BIOMES = {
+  aquatic:  { bg: 'tank_aqua_a.png', spr: 'clawde',  scale: 2.2, label: '🌊 Ocean' },
+  vivarium: { bg: 'tank_viv.png',    spr: 'mosskit', scale: 1.6, label: '🌿 Forest' },
+  desert:   { bg: 'tank_desert.png', spr: 'dunepup', scale: 1.6, label: '🏜️ Desert' },
+};
+const TANK_SCALE = 1.125, CW = 512, CH = 480, FW = 48, FRAMES = 9;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const persp = (pyN) => 0.62 + Math.max(0, Math.min(1, (pyN - 0.30) / 0.60)) * 0.56;
+
+let biome = 'aquatic';
+let paths = {};                 // biome -> [{x,y}] normalized
+const imgs = {};                // cache
+
+function load(src) { if (imgs[src]) return imgs[src]; const im = new Image(); const r = { im, ok: false }; im.onload = () => r.ok = true; im.src = src; imgs[src] = r; return r; }
+
+// ---- tabs ----
+const tabs = document.getElementById('tabs');
+Object.entries(BIOMES).forEach(([k, b]) => {
+  const t = document.createElement('button'); t.className = 'tab' + (k === biome ? ' on' : ''); t.textContent = b.label; t.dataset.k = k;
+  t.onclick = () => { biome = k; [...tabs.children].forEach(c => c.classList.toggle('on', c.dataset.k === k)); setStatus(''); };
+  tabs.appendChild(t);
+});
+
+// ---- drawing ----
+let drawing = false;
+function pt(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; }
+function pushPt(p) { const a = paths[biome] || (paths[biome] = []); const last = a[a.length - 1]; if (!last || Math.hypot((p.x - last.x) * CW, (p.y - last.y) * CH) > 6) a.push(p); }
+cv.addEventListener('pointerdown', e => { drawing = true; paths[biome] = []; pushPt(pt(e)); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (drawing) pushPt(pt(e)); });
+cv.addEventListener('pointerup', () => { drawing = false; const n = (paths[biome] || []).length; setStatus(n > 1 ? `path drawn (${n} pts) — press Save` : 'draw a longer path'); });
+
+document.getElementById('clear').onclick = () => { paths[biome] = []; setStatus('cleared — draw a new path, then Save'); };
+document.getElementById('save').onclick = save;
+function setStatus(s) { document.getElementById('status').textContent = s; }
+
+let TOKEN = '';
+fetch('/api/lab/token').then(r => r.json()).then(d => TOKEN = d.token).catch(() => {});
+fetch('/api/paths').then(r => r.json()).then(d => { for (const k in d) if (d[k] && d[k].points) paths[k] = d[k].points; }).catch(() => {});
+
+async function save() {
+  const pts = paths[biome] || [];
+  if (pts.length < 2) { setStatus('draw a path first'); return; }
+  setStatus('saving…');
+  try {
+    const r = await fetch('/api/paths', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': TOKEN }, body: JSON.stringify({ biome, points: pts }) });
+    const d = await r.json();
+    setStatus(d.ok ? `✓ saved ${biome} (${d.count} pts) — reload the tank to see it walk` : 'save failed: ' + (d.error || '?'));
+  } catch (e) { setStatus('save error: ' + e.message); }
+}
+
+// ---- arc-length follow for the live preview ----
+function build(pts) {
+  if (!pts || pts.length < 2) return null;
+  const P = pts.map(p => ({ x: p.x * CW, y: p.y * CH })); const cum = [0];
+  for (let i = 1; i < P.length; i++) cum.push(cum[i - 1] + Math.hypot(P[i].x - P[i - 1].x, P[i].y - P[i - 1].y));
+  return { P, cum, total: cum[cum.length - 1] };
+}
+function at(b, dist) {
+  const d = Math.max(0, Math.min(b.total, dist));
+  let i = 1; while (i < b.cum.length && b.cum[i] < d) i++;
+  const a = b.P[i - 1], c = b.P[i] || a, seg = (b.cum[i] - b.cum[i - 1]) || 1, t = (d - b.cum[i - 1]) / seg;
+  return { x: a.x + (c.x - a.x) * t, y: a.y + (c.y - a.y) * t, dx: c.x - a.x };
+}
+
+// ---- preview loop ----
+let dist = 0, dir = 1, frame = 0, fclk = 0, pauseT = 0, last = 0;
+function loop(ts) {
+  const dt = last ? Math.min(64, ts - last) : 16; last = ts;
+  const b = BIOMES[biome], bg = load('/assets/_bg/' + b.bg + '?v=9'), spr = load('/assets/' + b.spr + '.png');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, CW, CH);
+  if (bg.ok) ctx.drawImage(bg.im, 0, 0, CW, CH); else { ctx.fillStyle = '#08122b'; ctx.fillRect(0, 0, CW, CH); }
+
+  const pts = paths[biome] || [];
+  // draw the path (red pen) + endpoints
+  if (pts.length) {
+    ctx.strokeStyle = 'rgba(255,60,70,0.95)'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath(); pts.forEach((p, i) => { const x = p.x * CW, y = p.y * CH; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+    ctx.fillStyle = '#fff'; for (const p of [pts[0], pts[pts.length - 1]]) { ctx.beginPath(); ctx.arc(p.x * CW, p.y * CH, 4, 0, 7); ctx.fill(); }
+  }
+  // animate preview creature along the path
+  const bl = build(pts);
+  if (bl && spr.ok) {
+    if (pauseT > 0) pauseT -= dt; else {
+      dist += 0.9 * dir; if (dist >= bl.total) { dist = bl.total; dir = -1; } if (dist <= 0) { dist = 0; dir = 1; }
+      if (Math.random() < 0.004) pauseT = 400 + Math.random() * 900;
+      fclk += dt; if (fclk >= 110) { fclk = 0; frame = (frame + 1) % FRAMES; }
+    }
+    const q = at(bl, dist), pmul = persp(q.y / CH), sc = b.scale * TANK_SCALE * pmul;
+    const dw = FW * sc, dh = FW * sc, ox = Math.round(q.x - dw / 2), oy = Math.round(q.y - dh / 2);
+    ctx.save();
+    if ((dir > 0 ? q.dx : -q.dx) > 0) { ctx.translate(ox + dw, 0); ctx.scale(-1, 1); ctx.translate(-ox, 0); }
+    ctx.drawImage(spr.im, (frame % FRAMES) * FW, 0, FW, FW, ox, oy, dw, dh);
+    ctx.restore();
+  } else if (!pts.length) {
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('drag to draw a walk path', CW / 2, CH / 2); ctx.textAlign = 'start';
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body></html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Claudeboy — console designs</title>
+<link rel="stylesheet" href="/pixel.css?v=1" />
+<style>
+  body{ margin:0; background:#2a1a0e; color:#ffe9d0; font-family:var(--font-body); text-align:center; padding:20px 14px 46px; }
+  h1{ font-family:var(--font-title); font-size:20px; color:#ff8a3d; text-shadow:3px 3px 0 #7a3d12; margin:6px 0; line-height:1.4; }
+  .sub{ color:#e0a878; font-size:12px; max-width:660px; margin:6px auto 24px; line-height:1.6; }
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:30px; max-width:940px; margin:0 auto; justify-items:center; }
+  .cell .lab{ font-family:var(--font-title); font-size:10px; color:#ff8a3d; margin-top:14px; line-height:1.5; }
+  .cell .note{ font-size:10px; color:#c89468; margin-top:3px; }
+  .q{ max-width:640px; margin:28px auto 0; background:#3a2414; border:3px solid #c25e2a; padding:14px; font-size:12.5px; color:#ffe9d0; line-height:1.7; }
+
+  /* ---------- base console ---------- */
+  .con{ width:230px; padding:14px 14px 16px; position:relative; box-shadow:6px 6px 0 rgba(0,0,0,.35); }
+  .scr{ position:relative; background:#14110c; border:6px solid #0d0b07; overflow:hidden; aspect-ratio:1/0.92; }
+  .scr img{ width:100%; height:100%; object-fit:cover; image-rendering:pixelated; display:block; }
+  .scr::after{ content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.14),transparent 40%); pointer-events:none; }
+  .logo{ font-family:var(--font-title); letter-spacing:1px; }
+  .mon{ font-family:var(--font-body); font-weight:700; }
+  .dpad{ position:relative; width:34px; height:34px; }
+  .dpad::before,.dpad::after{ content:''; position:absolute; background:#14110c; border-radius:2px; }
+  .dpad::before{ left:12px; top:0; width:10px; height:34px; } .dpad::after{ left:0; top:12px; width:34px; height:10px; }
+  .ab{ display:flex; gap:7px; transform:rotate(-16deg); }
+  .btn{ width:20px; height:20px; border-radius:50%; background:#ffb347; border:3px solid #14110c; }
+  .spk{ display:flex; gap:3px; transform:rotate(-16deg); }
+  .spk i{ width:3px; height:14px; background:rgba(0,0,0,.35); display:block; border-radius:2px; }
+  .led{ width:8px; height:8px; border-radius:50%; background:#7dff8a; box-shadow:0 0 6px #7dff8a; }
+  .ctrl{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+
+  /* 1 · Classic — orange Game Boy silhouette */
+  .c1{ background:linear-gradient(#ff9a48,#f5793b); border:4px solid #b5451a; border-radius:14px 14px 46px 14px; }
+  .c1 .brandbar{ display:flex; align-items:baseline; justify-content:center; gap:6px; margin:9px 0 4px; }
+  .c1 .logo{ font-size:13px; color:#fff; text-shadow:2px 2px 0 #b5451a; }
+  .c1 .mon{ font-size:8px; color:#7a2f10; }
+  .c1 .scr{ border-radius:6px; }
+
+  /* 2 · Sleek modern — glossy two-tone, pill buttons */
+  .c2{ background:linear-gradient(#ffab5e,# e8641f); background:linear-gradient(160deg,#ffb066,#e8641f); border:4px solid #a83f12; border-radius:30px; }
+  .c2 .logo{ font-size:11px; color:#fff; margin:10px 0 3px; text-shadow:1px 1px 0 #a83f12; }
+  .c2 .mon{ font-size:8px; color:#5c2408; letter-spacing:2px; margin-bottom:6px; }
+  .c2 .scr{ border-radius:16px; border-width:5px; }
+  .c2 .pill{ width:38px; height:14px; border-radius:8px; background:#ffcf9f; border:3px solid #14110c; }
+  .c2 .ctrl{ justify-content:center; gap:16px; }
+
+  /* 3 · Retro stripe — cream body, orange brand stripe */
+  .c3{ background:#fff3e2; border:4px solid #c25e2a; border-radius:10px; }
+  .c3 .stripe{ background:linear-gradient(#ff8a3d,#ef6f27); margin:-14px -14px 10px; padding:8px 0 7px; border-bottom:4px solid #b5451a; }
+  .c3 .logo{ font-size:12px; color:#fff; text-shadow:2px 2px 0 #b5451a; }
+  .c3 .scr{ border-color:#c25e2a; }
+  .c3 .mon{ font-size:8px; color:#c25e2a; background:#ffe3c6; border:2px solid #c25e2a; padding:2px 6px; }
+  .c3 .ctrl{ margin-top:10px; }
+
+  /* 4 · Arcade — top marquee with CLAUDEMON */
+  .c4{ background:linear-gradient(#f5793b,#d95e22); border:4px solid #8f3910; border-radius:8px 8px 18px 18px; }
+  .c4 .marquee{ background:#14110c; margin:-14px -14px 10px; padding:8px 0; border-bottom:4px solid #ffb347; }
+  .c4 .marquee .mon{ font-family:var(--font-title); font-size:11px; color:#ffb347; letter-spacing:1px; }
+  .c4 .scr{ border-color:#0d0b07; }
+  .c4 .logo{ font-size:9px; color:#fff; margin-top:8px; opacity:.9; }
+
+  /* 5 · Pocket — compact deep orange */
+  .c5{ width:200px; background:linear-gradient(#ff8f42,#e0631f); border:4px solid #9a3f12; border-radius:20px 20px 26px 20px; }
+  .c5 .top{ display:flex; align-items:center; justify-content:space-between; margin:4px 2px 8px; }
+  .c5 .logo{ font-size:9px; color:#fff; text-shadow:1px 1px 0 #9a3f12; }
+  .c5 .scr{ border-radius:8px; aspect-ratio:1/0.8; }
+  .c5 .mon{ font-size:7px; color:#5c2408; letter-spacing:1px; }
+  .c5 .dpad{ width:28px; height:28px; } .c5 .btn{ width:16px; height:16px; }
+
+  /* 6 · Pro — charcoal + orange two-tone, premium */
+  .c6{ background:linear-gradient(#3a2416,#241610); border:4px solid #ff8a3d; border-radius:16px; }
+  .c6 .logo{ font-size:12px; color:#ff8a3d; margin:9px 0 2px; text-shadow:0 0 8px rgba(255,138,61,.5); }
+  .c6 .mon{ font-size:8px; color:#c89468; letter-spacing:2px; margin-bottom:7px; }
+  .c6 .scr{ border-color:#ff8a3d; border-radius:8px; }
+  .c6 .btn{ background:#ff8a3d; } .c6 .dpad::before,.c6 .dpad::after{ background:#ff8a3d; }
+  .c6 .spk i{ background:rgba(255,138,61,.4); }
+</style></head>
+<body>
+  <h1>🎮 CLAUDEBOY — CONSOLE DESIGNS</h1>
+  <div class="sub">Six faceplate designs — orange-primary, real digital-handheld look, with proper CLAUDEBOY + CLAUDEMON branding. Pick one and I'll build it as the real device around the game.</div>
+
+  <div class="grid">
+    <div class="cell">
+      <div class="con c1"><div class="brandbar"><span class="logo">CLAUDEBOY</span></div><div class="scr"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="ctrl"><span class="dpad"></span><span class="mon">CLAUDEMON</span><span class="ab"><span class="btn"></span><span class="btn"></span></span></div></div>
+      <div class="lab">1 · CLASSIC</div><div class="note">Game Boy silhouette</div>
+    </div>
+    <div class="cell">
+      <div class="con c2"><div class="logo">CLAUDEBOY</div><div class="mon">CLAUDEMON</div><div class="scr"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="ctrl"><span class="pill"></span><span class="pill"></span></div></div>
+      <div class="lab">2 · SLEEK</div><div class="note">glossy, pill buttons</div>
+    </div>
+    <div class="cell">
+      <div class="con c3"><div class="stripe"><span class="logo">CLAUDEBOY</span></div><div class="scr"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="ctrl"><span class="dpad"></span><span class="mon">CLAUDEMON</span><span class="ab"><span class="btn"></span><span class="btn"></span></span></div></div>
+      <div class="lab">3 · RETRO STRIPE</div><div class="note">cream + brand stripe</div>
+    </div>
+    <div class="cell">
+      <div class="con c4"><div class="marquee"><span class="mon">CLAUDEMON</span></div><div class="scr"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="ctrl"><span class="dpad"></span><span class="logo">CLAUDEBOY</span><span class="ab"><span class="btn"></span><span class="btn"></span></span></div></div>
+      <div class="lab">4 · ARCADE</div><div class="note">lit marquee header</div>
+    </div>
+    <div class="cell">
+      <div class="con c5"><div class="top"><span class="logo">CLAUDEBOY</span><span class="led"></span></div><div class="scr"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="ctrl"><span class="dpad"></span><span class="mon">CLAUDEMON</span><span class="ab"><span class="btn"></span><span class="btn"></span></span></div></div>
+      <div class="lab">5 · POCKET</div><div class="note">compact, power LED</div>
+    </div>
+    <div class="cell">
+      <div class="con c6"><div class="logo">CLAUDEBOY</div><div class="mon">CLAUDEMON · PRO</div><div class="scr"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="ctrl"><span class="dpad"></span><span class="spk"><i></i><i></i><i></i></span><span class="ab"><span class="btn"></span><span class="btn"></span></span></div></div>
+      <div class="lab">6 · PRO</div><div class="note">charcoal + neon orange</div>
+    </div>
+  </div>
+
+  <div class="q"><b>Pick a design (1–6)</b> — or mix ("2's body + 3's brand stripe"). I'll rebuild the real Claudeboy shell in that style, with the branding baked in. 🎮</div>
+</body></html>

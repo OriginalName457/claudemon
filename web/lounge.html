@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon — Lounge</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%A6%80%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{--bg:#1a1220;--panel:#2a1f2e;--panel2:#33253a;--ink:#f6ecda;--dim:#b79fb0;--amber:#f0a24a;--warm:#e5b877;--line:#463149;--good:#c98a4a;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(130% 90% at 50% 0%,#2e2033,#160f1c 72%);color:var(--ink);
+      font-family:"Courier New",monospace;min-height:100vh;display:flex;flex-direction:column;}
+    header{padding:12px 16px 8px;text-align:center;}
+    h1{margin:2px;letter-spacing:6px;color:var(--amber);font-size:20px;text-shadow:0 0 10px rgba(240,162,74,.4);}
+    nav{display:flex;gap:8px;justify-content:center;margin-top:8px;}
+    nav a{font-size:12px;color:var(--dim);text-decoration:none;padding:4px 12px;border:1px solid var(--line);border-radius:12px;}
+    nav a.on{color:var(--amber);border-color:var(--amber);background:#3a2418;box-shadow:0 0 10px rgba(240,162,74,.2);}
+    #app{flex:1;max-width:560px;width:100%;margin:0 auto;display:flex;flex-direction:column;padding:8px 12px 14px;min-height:0;}
+    /* hero scene banner */
+    #hero-wrap{position:relative;border:2px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:10px;
+      box-shadow:0 0 18px rgba(240,162,74,.14),inset 0 0 30px rgba(0,0,0,.35);}
+    #hero{display:block;width:100%;height:auto;image-rendering:pixelated;background:#160f1c;}
+    #herocap{position:absolute;left:12px;bottom:9px;right:12px;display:flex;align-items:flex-end;gap:10px;text-shadow:0 2px 4px #000;pointer-events:none;}
+    #herocap .who{font-size:16px;font-weight:bold;color:#fff4e2;letter-spacing:1px;}
+    #herocap .mood{font-size:11px;color:var(--warm);}
+    #herocap select{pointer-events:auto;margin-left:auto;font-family:inherit;font-size:12px;padding:5px 8px;border-radius:8px;border:2px solid var(--line);background:#241a28;color:var(--ink);}
+    #log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px 2px;min-height:0;}
+    .msg{max-width:82%;padding:8px 11px;border-radius:13px;font-size:13px;line-height:1.45;white-space:pre-wrap;}
+    .msg.clawde{align-self:flex-start;background:#3a2b40;border:1px solid var(--line);border-bottom-left-radius:3px;}
+    .msg.user{align-self:flex-end;background:linear-gradient(#d1863c,#b8702f);color:#fff6ea;border-bottom-right-radius:3px;}
+    .msg.think{align-self:flex-start;color:var(--dim);font-style:italic;}
+    #inbar{display:flex;gap:8px;margin-top:10px;}
+    #inbar input{flex:1;font-family:inherit;font-size:13px;padding:10px 12px;border-radius:11px;border:2px solid var(--line);background:#241a28;color:var(--ink);}
+    #inbar input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 8px rgba(240,162,74,.25);}
+    #inbar button{font-family:inherit;font-size:13px;padding:10px 16px;border-radius:11px;border:2px solid var(--amber);border-bottom-width:4px;background:#3a2418;color:var(--warm);cursor:pointer;font-weight:bold;}
+    #inbar button:active{transform:translateY(2px);border-bottom-width:2px;}
+    .hint{text-align:center;color:var(--dim);font-size:11px;margin-top:6px;}
+  </style>
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    /* ── pixel LIGHT (orange/white) theme ── */
+    body{font-family:var(--font-body)!important;letter-spacing:.5px;background:#fff6ec!important;color:#3a2617!important;}
+    h1{font-family:var(--font-title)!important;font-size:15px!important;letter-spacing:1px!important;line-height:1.5;color:#f5793b!important;text-shadow:3px 3px 0 #ffcf9f!important;}
+    #app{max-width:680px;}
+    nav a{border-radius:0!important;border:3px solid #c25e2a!important;box-shadow:3px 3px 0 #c25e2a;font-weight:700;background:#fff!important;color:#b07d4e!important;}
+    nav a:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #c25e2a;}
+    nav a.on{background:#f5793b!important;color:#fff!important;}
+    #herocap select{border-radius:0!important;border:3px solid #c25e2a!important;background:#fff!important;color:#3a2617!important;}
+    .msg{border-radius:0!important;}
+    .msg.clawde{background:#fff!important;border:3px solid #c25e2a!important;color:#3a2617!important;}
+    .msg.user{background:#f5793b!important;color:#fff!important;border:3px solid #c25e2a!important;}
+    .msg.think{color:#b07d4e!important;}
+    .hint{color:#b07d4e!important;}
+    #inbar input{border-radius:0!important;border:3px solid #c25e2a!important;background:#fff8ef!important;color:#3a2617!important;}
+    #inbar button{border-radius:0!important;border:3px solid #c25e2a!important;box-shadow:3px 3px 0 #c25e2a;font-family:var(--font-body);font-weight:700;background:#f5793b!important;color:#fff!important;}
+    #inbar button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #c25e2a;}
+    #mic{background:#fff!important;color:#c25e2a!important;font-size:15px!important;padding:8px 10px!important;}
+    #mic.rec{background:#d24a3a!important;color:#fff!important;border-color:#d24a3a!important;}
+    #mic.busy{opacity:.5;}
+    #hero-wrap{border-radius:0!important;box-shadow:none!important;border:3px solid #c25e2a!important;}
+    #herocap .who{font-family:var(--font-title);font-size:12px;line-height:1.5;color:#fff4e2;}
+    /* ── fit the handheld screen: match the other tabs exactly (no title) ── */
+    header{padding:0!important;margin:0!important;}
+    h1{display:none!important;}
+    nav{margin:6px 0 4px!important;}
+    nav a{font-size:9px!important;padding:4px 5px!important;border-width:2px!important;box-shadow:2px 2px 0 #c25e2a;}
+    #app{padding:4px 10px 8px!important;}
+    #hero-wrap{margin-bottom:6px!important;}
+    .msg{font-size:12px!important;padding:6px 9px!important;}
+    #inbar{margin-top:6px!important;}
+    #inbar input{padding:8px 10px!important;font-size:12px!important;}
+    #inbar button{padding:8px 12px!important;}
+    .hint{font-size:9px!important;margin-top:4px!important;}
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+  <script src="/voice.js?v=2"></script>
+</head>
+<body>
+  <header>
+    <h1>☕ LOUNGE</h1>
+    <nav><a href="/">🦀 Tank</a><a href="/den.html">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html" class="on">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+  </header>
+  <div id="app">
+    <div id="hero-wrap">
+      <canvas id="hero" width="480" height="132"></canvas>
+      <div id="herocap">
+        <div>
+          <div class="who" id="whoname">—</div>
+          <div class="mood" id="mood">—</div>
+        </div>
+        <select id="who"></select>
+      </div>
+    </div>
+    <div id="log"></div>
+    <div id="inbar">
+      <input id="box" placeholder="say something…" autocomplete="off" />
+      <button id="mic" title="tap to talk (tap again to stop)">🎤</button>
+      <button id="send">Send</button>
+    </div>
+    <div class="hint">powered by your own Claude — replies take a few seconds ☕</div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const log = $('log');
+    function bubble(text, who) { const d = document.createElement('div'); d.className = 'msg ' + who; d.textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+
+    const REG = {};
+    let WITH = 'clawde', OWNER = 'clawde';
+
+    // ---- hero scene: the creature you're chatting with paces the lounge ----
+    const hero = $('hero'), hx = hero.getContext('2d'), HW = hero.width, HH = hero.height;
+    const room = new Image(); let roomOk = false; room.onload = () => roomOk = true; room.src = '/assets/_rooms/lounge.png?v=2';
+    let heroSp = null, spr = new Image(), sprOk = false, hf = 0, hclk = 0, hxpos = HW * 0.5, hdir = 1, hlast = 0;
+    function setHeroCreature(ms) { heroSp = ms; sprOk = false; spr = new Image(); spr.onload = () => sprOk = true; spr.src = '/assets/' + ms.sheet + '?v=' + Date.now(); }
+    function heroLoop(ts) {
+      const dt = hlast ? Math.min(64, ts - hlast) : 16; hlast = ts;
+      hx.imageSmoothingEnabled = false; hx.clearRect(0, 0, HW, HH);
+      if (roomOk) { const rs = Math.max(HW / 240, HH / 144), rw = 240 * rs, rh = 144 * rs; hx.drawImage(room, (HW - rw) / 2, HH - rh, rw, rh); }
+      else { hx.fillStyle = '#160f1c'; hx.fillRect(0, 0, HW, HH); }
+      if (sprOk && heroSp) {
+        const fw = heroSp.frameW || 48, fr = heroSp.frames || 1, sc = (heroSp.scale || 1.6) * 0.82, dw = fw * sc, dh = fw * sc;
+        const floorY = HH * 0.95, lo = HW * 0.16, hi = HW * 0.84;
+        hxpos += 0.42 * hdir; if (hxpos < lo) { hxpos = lo; hdir = 1; } if (hxpos > hi) { hxpos = hi; hdir = -1; }
+        if (Math.random() < 0.005) hdir *= -1;
+        hclk += dt; if (hclk >= 1000 / (heroSp.fps || 8)) { hclk = 0; hf = (hf + 1) % fr; }
+        const ox = Math.round(hxpos - dw / 2), oy = Math.round(floorY - dh);
+        hx.save();
+        if (hdir > 0) { hx.translate(ox + dw, 0); hx.scale(-1, 1); hx.translate(-ox, 0); }
+        hx.drawImage(spr, (hf % fr) * fw, 0, fw, 48, ox, oy, dw, dh);
+        hx.restore();
+      }
+      requestAnimationFrame(heroLoop);
+    }
+    requestAnimationFrame(heroLoop);
+
+    async function loadWho() {
+      try {
+        const [spd, st] = await Promise.all([(await fetch('/api/species')).json(), (await fetch('/api/state')).json()]);
+        for (const sp of spd.species) REG[sp.id] = sp;
+        OWNER = st.starter || 'clawde';
+        const ids = [OWNER, ...(st.roster || [])].filter((id, i, a) => REG[id] && REG[id].artReady && a.indexOf(id) === i);
+        $('who').innerHTML = ids.map(id => `<option value="${id}">${REG[id].emoji} ${REG[id].name}</option>`).join('');
+        switchWith(OWNER);
+      } catch {}
+    }
+
+    function greeting(sp) {
+      const g = { slime: "...oh. hi. *wobbles happily*", octo: "ooh a visitor! i have five thoughts about that already.", snail: "...................hello. (worth the wait.)" };
+      return g[sp.id] || `*${sp.name} looks up from a comfy chair, coffee in hand* oh, hey — grab a seat. what's on your mind?`;
+    }
+
+    function switchWith(id) {
+      WITH = id; const sp = REG[id];
+      $('whoname').textContent = sp ? sp.name : id;
+      if (sp && sp.sprite) setHeroCreature(sp.sprite);
+      log.innerHTML = ''; loadHistory(); refreshMood();
+    }
+    $('who').addEventListener('change', () => switchWith($('who').value));
+
+    async function refreshMood() {
+      try {
+        const s = await (await fetch('/api/state')).json(); const sp = REG[WITH];
+        $('mood').textContent = WITH === OWNER ? (s.mood + ' · bond ' + s.bond) : (sp ? sp.rarity + ' · ' + sp.personality.split(';')[0] : '');
+      } catch {}
+    }
+
+    async function loadHistory() {
+      try {
+        const { history } = await (await fetch('/api/chat/history?with=' + WITH)).json();
+        if (!history || !history.length) {
+          // fresh conversation: lead with our shared work history if we have any,
+          // otherwise the creature's charming first-meeting hello.
+          let opener = null;
+          try { const g = await (await fetch('/api/greeting?id=' + WITH)).json(); if (g.continuity) opener = g.text; } catch {}
+          bubble(opener || greeting(REG[WITH] || { id: WITH }), 'clawde');
+          return;
+        }
+        for (const m of history) bubble(m.text, m.role === 'user' ? 'user' : 'clawde');
+      } catch { bubble("(couldn't load our chat history)", 'clawde'); }
+    }
+
+    let busy = false;
+    async function send() {
+      const box = $('box'); const text = box.value.trim();
+      if (!text || busy) return;
+      box.value = ''; busy = true; bubble(text, 'user');
+      const who = REG[WITH] ? REG[WITH].name : 'they';
+      const thinking = bubble(who + ' is thinking…', 'think');
+      try {
+        const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, with: WITH }) });
+        const data = await r.json(); thinking.remove();
+        bubble(data.reply || ('(' + (data.error || 'no reply') + ')'), 'clawde'); refreshMood();
+      } catch (e) { thinking.remove(); bubble('(got tongue-tied — is the server running?)', 'clawde'); }
+      busy = false; box.focus();
+    }
+    $('send').addEventListener('click', send);
+    $('box').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+    // A button: send the message
+    window.addEventListener('cb-a', (e) => { e.preventDefault(); send(); });
+
+    // hold-to-talk → captures the system mic, transcribes on-device (see /voice.js)
+    if (window.CMVoice) CMVoice.attach($('mic'), $('box'), (m) => bubble(m, 'think'));
+
+    loadWho();
+  </script>
+</body>
+</html>

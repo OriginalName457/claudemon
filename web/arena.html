@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Claudemon Arena</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<style>
+  :root{ --ink:#f0e6d8; --accent:#f5793b; --edge:#c25e2a; --dim:#a5917c; --good:#8fe06a; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html,body{ margin:0; height:100%; overflow:hidden; background:#0e1512; color:var(--ink);
+    font-family:ui-monospace,'Courier New',monospace; touch-action:none; }
+  #game{ display:block; width:100vw; height:100vh; }
+  .hud{ position:fixed; z-index:5; pointer-events:none; }
+  /* top-left player card */
+  #card{ top:10px; left:10px; background:rgba(18,16,12,.78); border:2px solid var(--edge); border-radius:10px; padding:8px 10px; min-width:172px; }
+  #card .row1{ display:flex; align-items:center; gap:7px; }
+  #card .nm{ font-size:14px; font-weight:700; }
+  #card .tier{ font-size:15px; }
+  #card .lv{ margin-left:auto; font-size:11px; color:var(--dim); }
+  #xpwrap{ height:6px; background:#2a2018; border-radius:3px; margin-top:6px; overflow:hidden; }
+  #xp{ height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#ffd23f); }
+  #card .hpwrap{ height:6px; background:#3a1a16; border-radius:3px; margin-top:4px; overflow:hidden; }
+  #card .hp{ height:100%; width:100%; background:linear-gradient(90deg,#d24a3a,#ff8b6b); }
+  #card .sub{ font-size:10px; color:var(--dim); margin-top:5px; letter-spacing:.5px; }
+  /* top-right factions + timer */
+  #fac{ top:10px; right:10px; background:rgba(18,16,12,.78); border:2px solid #2c2620; border-radius:10px; padding:7px 10px; text-align:right; }
+  #fac .t{ font-size:12px; color:var(--dim); margin-bottom:3px; }
+  #fac .f{ font-size:12px; display:flex; align-items:center; gap:6px; justify-content:flex-end; }
+  #fac .dot{ width:9px; height:9px; border-radius:2px; }
+  #clock{ font-size:13px; color:#ffd23f; margin-top:4px; }
+  /* minimap */
+  #mini{ bottom:12px; right:12px; width:120px; height:120px; background:rgba(10,14,12,.8); border:2px solid #2c2620; border-radius:8px; }
+  /* move buttons */
+  #moves{ bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:10px; pointer-events:auto; }
+  .mv{ width:60px; height:60px; border-radius:12px; border:2px solid var(--edge); background:rgba(24,20,14,.9);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--ink); font-size:10px; position:relative; }
+  .mv .k{ font-size:16px; line-height:1; }
+  .mv .nm2{ margin-top:2px; letter-spacing:.3px; }
+  .mv.locked{ opacity:.32; }
+  .mv .cd{ position:absolute; inset:0; background:rgba(0,0,0,.55); border-radius:10px; display:none; }
+  .mv.cooling .cd{ display:block; }
+  .mv:active{ transform:translateY(1px); }
+  /* joystick */
+  #joy{ position:fixed; z-index:5; width:120px; height:120px; border-radius:50%; border:2px solid #2c2620;
+    background:rgba(20,26,22,.5); bottom:16px; left:16px; pointer-events:auto; display:none; }
+  #joy .stick{ position:absolute; width:52px; height:52px; border-radius:50%; background:rgba(245,121,59,.85);
+    left:34px; top:34px; }
+  /* toasts */
+  #toast{ position:fixed; z-index:6; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+  #toast .big{ font-size:30px; font-weight:700; color:#ffd23f; text-shadow:2px 2px 0 #7a3b12; opacity:0; }
+  /* start / gameover overlay */
+  #ov{ position:fixed; inset:0; z-index:9; background:rgba(8,12,10,.9); display:flex; align-items:center; justify-content:center; }
+  #ov .box{ background:#16130f; border:3px solid var(--edge); border-radius:14px; padding:22px 20px; max-width:420px; width:88%; text-align:center; }
+  #ov h1{ margin:0 0 4px; font-size:24px; letter-spacing:1px; }
+  #ov p{ color:var(--dim); font-size:13px; margin:6px 0 14px; line-height:1.5; }
+  #pick{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 14px; }
+  .pk{ width:76px; border:2px solid #2c2620; border-radius:10px; padding:6px 4px; cursor:pointer; background:#0f0c09; }
+  .pk.sel{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+  .pk canvas{ width:52px; height:52px; image-rendering:pixelated; }
+  .pk .n{ font-size:9px; color:var(--dim); margin-top:2px; }
+  .btn{ font-family:inherit; font-weight:700; font-size:15px; color:#fff; background:var(--accent);
+    border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); border-radius:8px; padding:9px 18px; cursor:pointer; }
+  .btn:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+  .hint{ font-size:11px; color:var(--dim); margin-top:10px; line-height:1.5; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="joy" class="hud"><div class="stick"></div></div>
+<div id="card" class="hud">
+  <div class="row1"><span class="tier" id="tier">🥉</span><span class="nm" id="pname">—</span><span class="lv">Lv <b id="plv">1</b></span></div>
+  <div class="hpwrap"><div class="hp" id="php"></div></div>
+  <div id="xpwrap"><div id="xp"></div></div>
+  <div class="sub" id="psub">bronze · mass 0%</div>
+</div>
+<div id="fac" class="hud">
+  <div class="t">TERRITORY</div>
+  <div id="faclist"></div>
+  <div id="clock">20:00</div>
+</div>
+<canvas id="mini" class="hud" width="120" height="120"></canvas>
+<div id="moves" class="hud"></div>
+<div id="toast" class="hud"><div class="big" id="toastbig"></div></div>
+<div id="ov"><div class="box" id="ovbox"></div></div>
+
+<script src="/fx-attacks.js"></script>
+<script>
+'use strict';
+const CV = document.getElementById('game'), X = CV.getContext('2d');
+const $ = (id)=>document.getElementById(id);
+const WORLD = 3600, NODE_R = 150;
+const rand=(a,b)=>a+Math.random()*(b-a), pick=(a)=>a[Math.floor(Math.random()*a.length)], clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+let DPR = Math.min(2, window.devicePixelRatio||1);
+function resize(){ CV.width=innerWidth*DPR; CV.height=innerHeight*DPR; CV.style.width=innerWidth+'px'; CV.style.height=innerHeight+'px'; X.setTransform(DPR,0,0,DPR,0,0); X.imageSmoothingEnabled=false; }
+addEventListener('resize',resize); resize();
+
+// ---------- data ----------
+const EXCLUDE = new Set(['pricklepal','dustjerbo','brinemaw']);
+const ELEM = {
+  aquatic:  { fx:'splash', color:'#8fd0ff', color2:'#4fb6dc', name:'Tide' },
+  vivarium: { fx:'poison', color:'#8fd94a', color2:'#5a9e2a', name:'Bloom' },
+  desert:   { fx:'ember',  color:'#ffd23f', color2:'#f5793b', name:'Ember' },
+};
+const MELEE = { clawde:'slash', sting:'slash', fennette:'slash', mantleaf:'slash', spikelet:'slash', mosskit:'slash',
+  dunepup:'bite', gulpeel:'bite', mirageling:'bite', capshroom:'bite', chompsprout:'bite', slime:'bite', thornmaw:'bite', axoloom:'bite' };
+const RANGED = new Set(['octo','glowbug','mirageling','gulpeel','dustwraith','bloopjelly','seabreeze']);
+const FACTIONS = {
+  you:    { id:'you',    name:'Your Clan', color:'#f5793b' },
+  tide:   { id:'tide',   name:'Tide Pact', color:'#4fb6dc' },
+  bloom:  { id:'bloom',  name:'Bloom Kin', color:'#8fd94a' },
+  wild:   { id:'wild',   name:'The Corrupted', color:'#c25555' },
+};
+let SPECIES = {}, RARITY = {}, allies = [], wilds = [];
+const sheetCache = {};
+function sheet(url){ if(sheetCache[url]) return sheetCache[url]; const o={img:new Image(),ok:false,n:1,fw:48}; o.img.onload=()=>{o.ok=true;o.n=Math.max(1,Math.round(o.img.width/o.img.height));o.fw=o.img.height;}; o.img.src=url; sheetCache[url]=o; return o; }
+
+function moveset(sp){
+  const el = ELEM[sp.biome];
+  const melee = MELEE[sp.id] || 'bash';
+  const nm = { slash:'Rake', bite:'Chomp', bash:'Bash' }[melee];
+  return [
+    { slot:'A', key:'J', name:nm,       fx:melee,           kind:'melee',      lvl:1, dmg:9,  cd:0.5, range:64,  color:'#ffffff', color2:'#ffd7c0' },
+    { slot:'D', key:'K', name:'Dash',    fx:'dodge',         kind:'dash',       lvl:1, dmg:0,  cd:1.6, range:0,   color:el.color,  color2:el.color2 },
+    { slot:'S', key:'L', name: RANGED.has(sp.id)?'Bolt':(el.name+' Burst'),
+                          fx: RANGED.has(sp.id)?'orb':el.fx, kind: RANGED.has(sp.id)?'projectile':'aoe',
+                          lvl:4, dmg: RANGED.has(sp.id)?16:13, cd:2.2, range: RANGED.has(sp.id)?520:96, color:el.color, color2:el.color2 },
+    { slot:'U', key:'U', name:'Ultra',   fx:'shock',         kind:'nova',       lvl:8, dmg:34, cd:9,   range:150, color:'#bfe6ff', color2:'#6cb8ff' },
+  ];
+}
+
+// ---------- entities ----------
+let ents=[], food=[], nodes=[], vfx=[], player=null, cam={x:0,y:0}, T=0, running=false, gameTime=20*60, sizeCapMass=1;
+
+function sizeTier(mass){ return mass<0.34?0:mass<0.67?1:2; }
+const TIER_ICON=['🥉','🥈','🥇'], TIER_NAME=['bronze','silver','gold'];
+function massScale(mass){ return 0.62 + mass*1.25; }         // sprite multiplier
+function radiusOf(e){ return 15*massScale(e.mass)*(e.evolved?1.18:1); }
+
+function makeEnt(id, faction, x, y, isPlayer){
+  const sp = SPECIES[id]; if(!sp) return null;
+  const e = { id, sp, faction, x, y, vx:0, vy:0, face:1, mass: isPlayer?0.15:rand(0.12,0.45),
+    hp:100, maxhp:100, level:1, xp:0, moves:moveset(sp), cds:{}, isPlayer:!!isPlayer, evolved:false,
+    aiT:0, target:null, wander:{x:rand(0,WORLD),y:rand(0,WORLD)}, moving:false, anim:Math.random()*9, survived:0,
+    idle: sheet('/assets/'+sp.sprite.sheet), walk: sheet('/assets/_anim/'+id+'-walk-right.png'), fw: sp.sprite.frameW||48 };
+  e.maxhp = 70 + sp.stats.vigor*8; e.hp=e.maxhp;
+  e.spd = 78 + sp.stats.speed*11;
+  return e;
+}
+function unlockedMoves(e){ return e.moves.filter(m=>e.level>=m.lvl); }
+
+// ---------- world ----------
+function spawnWorld(starterId){
+  ents=[]; food=[]; nodes=[]; vfx=[]; T=0; gameTime=20*60;
+  player = makeEnt(starterId,'you', WORLD/2, WORLD/2, true); ents.push(player);
+  // territory nodes in a loose grid
+  const gx=[0.22,0.5,0.78];
+  for(const fx of gx) for(const fy of gx){
+    if(Math.random()<0.12) continue;
+    nodes.push({ x:fx*WORLD+rand(-90,90), y:fy*WORLD+rand(-90,90), owner:'wild', prog:{}, pulse:0 });
+  }
+  // give player clan the nearest node, rivals a corner each
+  nodes.sort((a,b)=>dist(a,player)-dist(b,player));
+  nodes[0].owner='you';
+  nodes[nodes.length-1].owner='tide'; nodes[nodes.length-2].owner='bloom';
+  // starter allies for player clan near home
+  for(let i=0;i<2;i++){ const a=makeEnt(pick(allies),'you', player.x+rand(-140,140), player.y+rand(-140,140)); if(a) ents.push(a); }
+  // rival clan bots + wild mobs
+  for(let i=0;i<6;i++){ const f=Math.random()<0.5?'tide':'bloom'; const e=makeEnt(pick(allies),f, rand(0,WORLD),rand(0,WORLD)); if(e) ents.push(e); }
+  for(let i=0;i<10;i++){ const e=makeEnt(pick(wilds),'wild', rand(0,WORLD),rand(0,WORLD)); if(e) ents.push(e); }
+  for(let i=0;i<220;i++) food.push({x:rand(0,WORLD),y:rand(0,WORLD)});
+  cam.x=player.x; cam.y=player.y;
+}
+
+// ---------- input ----------
+const keys={}; let aim={x:1,y:0};
+addEventListener('keydown',e=>{ keys[e.key.toLowerCase()]=true;
+  if(!running) return;
+  const m={j:'A',k:'D',l:'S',u:'U',' ':'D'}[e.key.toLowerCase()];
+  if(m) useMove(m);
+});
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+// pointer joystick (touch/mouse on left half) — desktop also uses WASD
+let joyId=null, joyBase={x:0,y:0}, joyVec={x:0,y:0};
+const joyEl=$('joy');
+function isTouch(){ return matchMedia('(pointer:coarse)').matches; }
+if(isTouch()) joyEl.style.display='block';
+CV.addEventListener('pointerdown',e=>{
+  if(!running) return;
+  if(e.clientX < innerWidth*0.5){ joyId=e.pointerId; joyBase={x:e.clientX,y:e.clientY}; joyEl.style.display='block'; joyEl.style.left=(e.clientX-60)+'px'; joyEl.style.top=(e.clientY-60)+'px'; }
+  else { const dx=e.clientX-innerWidth/2, dy=e.clientY-(innerHeight/2); const l=Math.hypot(dx,dy)||1; aim={x:dx/l,y:dy/l}; useMove('A'); }
+});
+addEventListener('pointermove',e=>{ if(e.pointerId===joyId){ let dx=e.clientX-joyBase.x, dy=e.clientY-joyBase.y; const l=Math.hypot(dx,dy); const m=Math.min(l,52); const a=Math.atan2(dy,dx); joyVec={x:Math.cos(a)*(m/52),y:Math.sin(a)*(m/52)}; joyEl.querySelector('.stick').style.transform=`translate(${Math.cos(a)*m}px,${Math.sin(a)*m}px)`; } });
+addEventListener('pointerup',e=>{ if(e.pointerId===joyId){ joyId=null; joyVec={x:0,y:0}; joyEl.querySelector('.stick').style.transform=''; if(isTouch())joyEl.style.display='block'; else joyEl.style.display='none'; } });
+
+function inputVec(){
+  let x=0,y=0;
+  if(keys['w']||keys['arrowup'])y-=1; if(keys['s']||keys['arrowdown'])y+=1;
+  if(keys['a']||keys['arrowleft'])x-=1; if(keys['d']||keys['arrowright'])x+=1;
+  x+=joyVec.x; y+=joyVec.y; const l=Math.hypot(x,y); if(l>1){x/=l;y/=l;} return {x,y};
+}
+
+// ---------- moves / combat ----------
+function useMove(slot){
+  if(!player||player.dead) return;
+  const m = player.moves.find(mm=>mm.slot===slot); if(!m || player.level<m.lvl) return;
+  if((player.cds[slot]||0)>0) return;
+  fireMove(player, m);
+  player.cds[slot]=m.cd;
+}
+function nearestEnemy(e, range){
+  let best=null,bd=range||1e9;
+  for(const o of ents){ if(o===e||o.dead) return o===e?best:best; if(!hostileTo(e,o)) continue; const d=dist(e,o); if(d<bd){bd=d;best=o;} }
+  return best;
+}
+function hostileTo(a,b){ if(a.faction===b.faction) return false; return true; }
+function fireMove(e, m){
+  // aim: player uses aim vec or nearest; bots use their target
+  let dir;
+  if(e.isPlayer){ const near=nearestEnemy(e, m.range?m.range+40:180); if(near){ const dx=near.x-e.x,dy=near.y-e.y,l=Math.hypot(dx,dy)||1; dir={x:dx/l,y:dy/l}; } else dir={...aim}; }
+  else { const near=e.target||nearestEnemy(e,320); if(!near) return; const dx=near.x-e.x,dy=near.y-e.y,l=Math.hypot(dx,dy)||1; dir={x:dx/l,y:dy/l}; }
+  e.face = dir.x<0?-1:1;
+  const dmg = m.dmg*(e.evolved?1.35:1)*(1+ (e.sp.stats.vigor-6)*0.03);
+  if(m.kind==='dash'){ e.vx += dir.x*260; e.vy += dir.y*260; e.iframe=0.35; vfx.push({fx:'dodge',x:e.x,y:e.y,t:0,dur:0.4,scale:massScale(e.mass),dir:e.face,color:m.color,color2:m.color2,follow:e}); return; }
+  if(m.kind==='projectile'){ vfx.push({proj:true,fx:m.fx,x:e.x+dir.x*20,y:e.y+dir.y*20,vx:dir.x*300,vy:dir.y*300,t:0,dur:1.8,scale:massScale(e.mass)*0.9,dir:e.face,color:m.color,color2:m.color2,owner:e,dmg}); return; }
+  // melee / aoe / nova: hit enemies in range now
+  const cx=e.x+dir.x*(m.kind==='melee'?24:0), cy=e.y+dir.y*(m.kind==='melee'?24:0);
+  const R = m.range*massScale(e.mass);
+  vfx.push({fx:m.fx,x:cx,y:cy,t:0,dur:m.kind==='nova'?0.6:0.42,scale:massScale(e.mass)*(m.kind==='nova'?2.2:1.25),dir:e.face,color:m.color,color2:m.color2});
+  for(const o of ents){ if(o===e||o.dead||!hostileTo(e,o)) continue; if(dist({x:cx,y:cy},o)<R+radiusOf(o)){ hurt(o, dmg, e); } }
+  if(m.kind==='nova') for(const o of ents){ if(o===e||o.dead||!hostileTo(e,o)) continue; if(dist(e,o)<R){ const a=Math.atan2(o.y-e.y,o.x-e.x); o.vx+=Math.cos(a)*180; o.vy+=Math.sin(a)*180; } }
+}
+function hurt(o, dmg, by){
+  if(o.iframe>0) return;
+  o.hp-=dmg; o.flash=0.12;
+  if(o.hp<=0 && !o.dead){ die(o, by); }
+}
+function die(o, by){
+  o.dead=true;
+  for(let i=0;i<6;i++) food.push({x:o.x+rand(-24,24),y:o.y+rand(-24,24)});
+  if(by){ by.xp+= 22; by.mass=Math.min(sizeCapMass, by.mass + o.mass*0.35 + 0.03); checkLevel(by); }
+  if(o.isPlayer){ endGame(false); return; }
+  // respawn: wild always; clan bots respawn at an owned node of their faction
+  setTimeout(()=>{ if(!running) return; const owned=nodes.filter(n=>n.owner===o.faction);
+    let x=rand(0,WORLD),y=rand(0,WORLD); if(owned.length){ const n=pick(owned); x=n.x+rand(-120,120); y=n.y+rand(-120,120); }
+    const nid = o.faction==='wild'?pick(wilds):pick(allies); const ne=makeEnt(nid,o.faction,x,y); if(ne) ents.push(ne);
+  }, 2500);
+}
+function checkLevel(e){
+  let leveled=false;
+  while(e.xp >= e.level*45){ e.xp-=e.level*45; e.level++; e.maxhp+=8; e.hp=Math.min(e.maxhp,e.hp+20); leveled=true;
+    const just=e.moves.find(m=>m.lvl===e.level);
+    if(e.isPlayer && just) toast('◈ '+just.name+' unlocked!');
+    else if(e.isPlayer) toast('Level '+e.level+'!');
+  }
+  // evolution: gold tier + level>=8 + survived 90s
+  if(!e.evolved && sizeTier(e.mass)===2 && e.level>=8 && e.survived>90){ e.evolved=true; e.maxhp*=1.3; e.hp=e.maxhp;
+    if(e.isPlayer) toast('✦ EVOLVED ✦'); }
+  return leveled;
+}
+
+// ---------- AI ----------
+function updateAI(e,dt){
+  e.aiT-=dt;
+  const enemy = nearestEnemy(e, 340);
+  e.target = enemy;
+  let goal;
+  if(enemy && dist(e,enemy)<300){ goal=enemy; // engage
+    const um=unlockedMoves(e).filter(m=>m.kind!=='dash');
+    for(const m of um){ if((e.cds[m.slot]||0)<=0 && dist(e,enemy) < (m.range+50)*massScale(e.mass)+40){ fireMove(e,m); e.cds[m.slot]=m.cd; break; } }
+  } else {
+    // seek nearest food, or contest a non-owned node
+    let bf=null,bd=1e9; for(const f of food){ const d=dist(e,f); if(d<bd){bd=d;bf=f;} if(d<260) break; }
+    const contest = nodes.filter(n=>n.owner!==e.faction).sort((a,b)=>dist(a,e)-dist(b,e))[0];
+    goal = (bf && bd<420)?bf : (contest && Math.random()<0.6?contest:e.wander);
+    if(dist(e,e.wander)<60 || e.aiT<=0){ e.wander={x:rand(0,WORLD),y:rand(0,WORLD)}; e.aiT=rand(2,5); }
+  }
+  const dx=goal.x-e.x, dy=goal.y-e.y, l=Math.hypot(dx,dy)||1;
+  e.vx += (dx/l)*e.spd*dt*4; e.vy += (dy/l)*e.spd*dt*4; e.face=dx<0?-1:1;
+}
+
+// ---------- territory ----------
+function updateNodes(dt){
+  for(const n of nodes){
+    n.pulse+=dt;
+    const counts={}; for(const e of ents){ if(e.dead) continue; if(dist(e,n)<NODE_R+radiusOf(e)){ counts[e.faction]=(counts[e.faction]||0)+1; } }
+    // dominant faction gains progress
+    let dom=null,dn=0; for(const f in counts){ if(counts[f]>dn){dn=counts[f];dom=f;} }
+    const contested = Object.keys(counts).length>1;
+    if(dom && !contested){ n.prog[dom]=(n.prog[dom]||0)+dt; if(n.prog[dom]>2.2 && n.owner!==dom){ n.owner=dom; n.prog={}; if(dom==='you')toast('▲ Node captured!'); } }
+    // owned node: heal owners + occasionally spawn a clansman
+    if(n.owner!=='wild'){ n.spawnT=(n.spawnT||0)-dt; if(n.spawnT<=0){ n.spawnT=rand(9,15);
+      const mine=ents.filter(e=>e.faction===n.owner&&!e.dead).length;
+      if(mine<9 && running){ const nid=n.owner==='wild'?pick(wilds):pick(allies); const ne=makeEnt(nid,n.owner,n.x+rand(-90,90),n.y+rand(-90,90)); if(ne)ents.push(ne); } } }
+  }
+}
+function territoryCounts(){ const c={you:0,tide:0,bloom:0,wild:0}; for(const n of nodes)c[n.owner]=(c[n.owner]||0)+1; return c; }
+
+// ---------- update ----------
+function update(dt){
+  T+=dt; gameTime-=dt; if(gameTime<=0){ endGame(true); return; }
+  sizeCapMass = 1; // could ramp
+  // player input
+  if(player && !player.dead){ const iv=inputVec(); player.vx += iv.x*player.spd*dt*6; player.vy += iv.y*player.spd*dt*6; if(iv.x||iv.y){ player.face=iv.x<0?-1:(iv.x>0?1:player.face); player.moving=true; } else player.moving=false; }
+  for(const e of ents){ if(e.dead) continue;
+    if(!e.isPlayer) updateAI(e,dt);
+    // integrate
+    e.vx*=0.86; e.vy*=0.86; e.x=clamp(e.x+e.vx*dt,10,WORLD-10); e.y=clamp(e.y+e.vy*dt,10,WORLD-10);
+    e.moving = Math.hypot(e.vx,e.vy)>14; if(e.moving) e.anim+=dt*9;
+    e.survived+=dt; if(e.iframe>0)e.iframe-=dt; if(e.flash>0)e.flash-=dt;
+    for(const s in e.cds){ if(e.cds[s]>0)e.cds[s]-=dt; }
+    // eat food
+    for(let i=food.length-1;i>=0;i--){ if(dist(e,food[i])<radiusOf(e)+8){ food.splice(i,1); e.mass=Math.min(sizeCapMass,e.mass+0.012); e.xp+=4; e.hp=Math.min(e.maxhp,e.hp+2); checkLevel(e);
+      if(food.length<160 && Math.random()<0.8) food.push({x:rand(0,WORLD),y:rand(0,WORLD)}); } }
+    // bump-eat much smaller enemies
+    for(const o of ents){ if(o===e||o.dead||!hostileTo(e,o))continue; if(dist(e,o)<radiusOf(e) && e.mass>o.mass*1.7){ hurt(o, 999, e); } }
+  }
+  ents = ents.filter(e=>!e.dead || e.isPlayer);
+  if(player.dead) ents=ents.filter(e=>e!==player||false);
+  // vfx / projectiles
+  for(const v of vfx){ v.t+=dt; if(v.follow){ v.x=v.follow.x; v.y=v.follow.y; }
+    if(v.proj){ v.x+=v.vx*dt; v.y+=v.vy*dt; for(const o of ents){ if(o===v.owner||o.dead||!hostileTo(v.owner,o))continue; if(dist(v,o)<radiusOf(o)+8){ hurt(o,v.dmg,v.owner); v.t=v.dur; break; } } } }
+  vfx = vfx.filter(v=>v.t<v.dur);
+  updateNodes(dt);
+  // camera
+  cam.x += (player.x-cam.x)*Math.min(1,dt*6); cam.y += (player.y-cam.y)*Math.min(1,dt*6);
+  updateHUD();
+}
+
+// ---------- render ----------
+function drawCreature(e){
+  const sx=e.x-cam.x+innerWidth/2, sy=e.y-cam.y+innerHeight/2;
+  const sc = (e.sp.sprite.scale||1.6)*massScale(e.mass)*(e.evolved?1.18:1);
+  const sh = (e.moving && e.walk.ok)? e.walk : e.idle;
+  const fw = sh.ok? sh.fw : e.fw, n = sh.ok? sh.n : 1;
+  const fr = Math.floor(e.anim)%n;
+  const dw = fw*sc, dh = fw*sc;
+  // faction ring + shadow
+  X.globalAlpha=.28; X.fillStyle='#000'; X.beginPath(); X.ellipse(sx,sy+dh*0.34,dw*0.32,dh*0.13,0,0,7); X.fill(); X.globalAlpha=1;
+  X.strokeStyle=FACTIONS[e.faction].color; X.lineWidth=e===player?3:2; X.globalAlpha=e===player?.9:.5;
+  X.beginPath(); X.arc(sx,sy,radiusOf(e)+6,0,7); X.stroke(); X.globalAlpha=1;
+  if(e.evolved){ X.strokeStyle='#ffd23f'; X.lineWidth=2; X.beginPath(); X.arc(sx,sy,radiusOf(e)+10,0,7); X.stroke(); }
+  // sprite (flip by facing)
+  X.save(); X.translate(sx,sy-dh*0.08); X.scale(e.face<0?-1:1,1);
+  if(e.flash>0){ X.globalAlpha=1; }
+  if(sh.ok) X.drawImage(sh.img, fr*fw,0,fw,fw, -dw/2,-dh/2,dw,dh);
+  else { X.fillStyle=FACTIONS[e.faction].color; X.fillRect(-8,-8,16,16); }
+  X.restore();
+  if(e.flash>0){ X.globalAlpha=.5; X.fillStyle='#fff'; X.beginPath(); X.arc(sx,sy,radiusOf(e),0,7); X.fill(); X.globalAlpha=1; }
+  // hp bar for non-player
+  if(!e.isPlayer && e.hp<e.maxhp){ const w=radiusOf(e)*2; X.fillStyle='#000a'; X.fillRect(sx-w/2,sy-dh*0.5-8,w,4); X.fillStyle=e.faction==='wild'?'#d24a3a':FACTIONS[e.faction].color; X.fillRect(sx-w/2,sy-dh*0.5-8,w*clamp(e.hp/e.maxhp,0,1),4); }
+  // tier pip
+  X.font='10px monospace'; X.textAlign='center'; X.fillStyle='#fff'; X.fillText(TIER_ICON[sizeTier(e.mass)], sx, sy-dh*0.5-12);
+}
+function render(){
+  X.clearRect(0,0,innerWidth,innerHeight);
+  // biome-ish ground
+  X.fillStyle='#0f1713'; X.fillRect(0,0,innerWidth,innerHeight);
+  const ox=(-cam.x+innerWidth/2)%80, oy=(-cam.y+innerHeight/2)%80;
+  X.strokeStyle='#17231c'; X.lineWidth=1; X.beginPath();
+  for(let x=ox;x<innerWidth;x+=80){X.moveTo(x,0);X.lineTo(x,innerHeight);} for(let y=oy;y<innerHeight;y+=80){X.moveTo(0,y);X.lineTo(innerWidth,y);} X.stroke();
+  // world border
+  const bx=-cam.x+innerWidth/2, by=-cam.y+innerHeight/2; X.strokeStyle='#2c3a30'; X.lineWidth=4; X.strokeRect(bx,by,WORLD,WORLD);
+  // nodes
+  for(const n of nodes){ const nx=n.x-cam.x+innerWidth/2, ny=n.y-cam.y+innerHeight/2; const c=FACTIONS[n.owner].color;
+    X.globalAlpha=.12; X.fillStyle=c; X.beginPath(); X.arc(nx,ny,NODE_R,0,7); X.fill(); X.globalAlpha=1;
+    X.strokeStyle=c; X.lineWidth=3; X.setLineDash([10,8]); X.lineDashOffset=-n.pulse*20; X.beginPath(); X.arc(nx,ny,NODE_R,0,7); X.stroke(); X.setLineDash([]);
+    X.fillStyle=c; X.beginPath(); X.arc(nx,ny,7,0,7); X.fill(); X.font='9px monospace'; X.textAlign='center'; X.fillStyle='#cbb'; X.fillText('⚑ '+FACTIONS[n.owner].name, nx, ny-NODE_R+14); }
+  // food
+  X.fillStyle='#c6f36a'; for(const f of food){ const fx=f.x-cam.x+innerWidth/2, fy=f.y-cam.y+innerHeight/2; if(fx<-10||fx>innerWidth+10||fy<-10||fy>innerHeight+10)continue; X.fillRect(fx-2,fy-2,4,4); }
+  // entities (sorted by y)
+  const vis=ents.filter(e=>!e.dead).sort((a,b)=>a.y-b.y); for(const e of vis) drawCreature(e);
+  // vfx
+  for(const v of vfx){ const vx=v.x-cam.x+innerWidth/2, vy=v.y-cam.y+innerHeight/2; const fn=window.FXA[v.fx]; if(!fn)continue;
+    X.save(); X.translate(vx-32*(v.scale||1), vy-34*(v.scale||1)); X.scale(v.scale||1,v.scale||1); X.imageSmoothingEnabled=false;
+    fn(X, clamp(v.t/v.dur,0,1), {cx:32,cy:34,scale:1,dir:v.dir||1,color:v.color,color2:v.color2}); X.restore(); }
+  renderMini();
+}
+function renderMini(){
+  const M=$('mini'), m=M.getContext('2d'); m.clearRect(0,0,120,120); m.fillStyle='#0a0e0c'; m.fillRect(0,0,120,120);
+  const s=120/WORLD;
+  for(const n of nodes){ m.fillStyle=FACTIONS[n.owner].color; m.globalAlpha=.5; m.beginPath(); m.arc(n.x*s,n.y*s,NODE_R*s,0,7); m.fill(); m.globalAlpha=1; }
+  for(const e of ents){ if(e.dead)continue; m.fillStyle=FACTIONS[e.faction].color; const r=e.isPlayer?3:1.6; m.fillRect(e.x*s-r,e.y*s-r,r*2,r*2); }
+}
+
+// ---------- HUD ----------
+function updateHUD(){
+  if(!player) return;
+  $('pname').textContent=player.sp.name; $('plv').textContent=player.level;
+  $('tier').textContent=TIER_ICON[sizeTier(player.mass)];
+  $('php').style.width=clamp(player.hp/player.maxhp*100,0,100)+'%';
+  $('xp').style.width=clamp(player.xp/(player.level*45)*100,0,100)+'%';
+  $('psub').textContent=TIER_NAME[sizeTier(player.mass)]+' · mass '+Math.round(player.mass*100)+'%'+(player.evolved?' · ✦evolved':'');
+  const c=territoryCounts(); const el=$('faclist'); el.innerHTML='';
+  for(const f of ['you','tide','bloom','wild']){ const d=document.createElement('div'); d.className='f'; d.innerHTML=`<span>${FACTIONS[f].name}: ${c[f]||0}</span><span class="dot" style="background:${FACTIONS[f].color}"></span>`; el.appendChild(d); }
+  const mm=Math.floor(gameTime/60), ss=Math.floor(gameTime%60); $('clock').textContent=`${mm}:${ss<10?'0':''}${ss}`;
+  // move buttons cd/lock
+  for(const m of player.moves){ const b=document.getElementById('mv-'+m.slot); if(!b)continue;
+    b.classList.toggle('locked', player.level<m.lvl);
+    const cd=player.cds[m.slot]||0; b.classList.toggle('cooling', cd>0);
+    b.querySelector('.cd').style.background=`conic-gradient(rgba(0,0,0,.55) ${cd/m.cd*360}deg, transparent 0)`;
+  }
+}
+function buildMoveBar(){
+  const bar=$('moves'); bar.innerHTML='';
+  for(const m of player.moves){ const b=document.createElement('div'); b.className='mv'; b.id='mv-'+m.slot;
+    b.innerHTML=`<div class="k">${m.slot}</div><div class="nm2">${m.name}</div><div class="cd"></div>`;
+    b.addEventListener('pointerdown',ev=>{ev.stopPropagation(); useMove(m.slot);}); bar.appendChild(b); }
+}
+let toastT=0;
+function toast(txt){ const t=$('toastbig'); t.textContent=txt; t.style.transition='none'; t.style.opacity='1'; t.style.transform='scale(1.15)'; requestAnimationFrame(()=>{ t.style.transition='all 1.1s'; t.style.opacity='0'; t.style.transform='scale(1)'; }); }
+
+// ---------- loop ----------
+let last=0;
+function loop(ts){ if(!running){return;} const dt=Math.min(0.05,(ts-last)/1000||0); last=ts; update(dt); render(); requestAnimationFrame(loop); }
+
+// ---------- menus ----------
+function startScreen(){
+  running=false;
+  const box=$('ovbox'); $('ov').style.display='flex';
+  box.innerHTML=`<h1>⚔️ Claudemon Arena</h1><p>Eat to grow 🥉→🥈→🥇, level up to unlock moves, and fight for territory. Your clan spawns from the nodes you hold. Survive & dominate the map.</p><div style="font-size:12px;color:var(--dim);margin-bottom:6px">pick your Claudemon</div><div id="pick"></div><button class="btn" id="go">Enter the arena ▸</button><div class="hint">move: WASD / left-stick · attack J · dash K/Space · special L · ultra U · (tap buttons on mobile)</div>`;
+  const pk=$('pick'); let sel=allies[0];
+  for(const id of allies){ const sp=SPECIES[id]; const d=document.createElement('div'); d.className='pk'+(id===sel?' sel':''); d.dataset.id=id;
+    const cv=document.createElement('canvas'); cv.width=48; cv.height=48; d.appendChild(cv); const nm=document.createElement('div'); nm.className='n'; nm.textContent=sp.name; d.appendChild(nm);
+    const sh=sheet('/assets/'+sp.sprite.sheet); const c=cv.getContext('2d'); c.imageSmoothingEnabled=false;
+    (function anim(){ if(sh.ok){ const fr=Math.floor(performance.now()/110)%sh.n; c.clearRect(0,0,48,48); c.drawImage(sh.img,fr*sh.fw,0,sh.fw,sh.fw,0,0,48,48);} requestAnimationFrame(anim);})();
+    d.addEventListener('click',()=>{ sel=id; [...pk.children].forEach(x=>x.classList.toggle('sel',x.dataset.id===id)); });
+    pk.appendChild(d); }
+  $('go').onclick=()=>{ $('ov').style.display='none'; spawnWorld(sel); buildMoveBar(); running=true; last=performance.now(); requestAnimationFrame(loop); };
+}
+function endGame(win){
+  running=false; const c=territoryCounts();
+  const box=$('ovbox'); $('ov').style.display='flex';
+  box.innerHTML=`<h1>${win?(c.you>=c.tide&&c.you>=c.bloom?'👑 Clan Victory':'⏱ Time!'):'💀 Defeated'}</h1>
+    <p>${player.sp.name} — Lv ${player.level}, ${TIER_NAME[sizeTier(player.mass)]} tier${player.evolved?' ✦evolved':''}<br>Your clan held ${c.you} node${c.you===1?'':'s'} · Tide ${c.tide} · Bloom ${c.bloom}</p>
+    <button class="btn" id="again">Play again ▸</button>`;
+  $('again').onclick=startScreen;
+}
+
+// ---------- boot ----------
+(async()=>{
+  try{
+    const d = await (await fetch('/api/species')).json();
+    RARITY=d.rarity||{};
+    for(const sp of d.species){ SPECIES[sp.id]=sp; }
+    allies = d.species.filter(s=>s.faction==='friendly' && !EXCLUDE.has(s.id) && s.sprite).map(s=>s.id);
+    wilds  = d.species.filter(s=>s.faction==='hostile'  && !EXCLUDE.has(s.id) && s.sprite).map(s=>s.id);
+    startScreen();
+  }catch(e){ $('ovbox').innerHTML='<h1>offline</h1><p>Start the Claudemon server, then reload.<br><small>'+e.message+'</small></p>'; }
+})();
+</script>
+</body>
+</html>

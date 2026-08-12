@@ -1,0 +1,26 @@
+# secrets — never commit
+.pixellab-key
+.env
+.env.*
+*.key
+*.pem
+
+# runtime state + generated (holds local paths / agent MCP configs)
+state/
+node_modules/
+*.log
+npm-debug.log*
+
+# local Claude config
+.claude/settings.local.json
+.claude/*.local.*
+
+# dev scratch — not used by the app (art-iteration history + a sprite backup)
+art-checkpoints/
+web/assets/_backup/
+
+# editors / os
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

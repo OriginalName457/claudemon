@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon — Den</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    :root{ --bg:#fff6ec; --panel:#ffffff; --ink:#3a2617; --dim:#b07d4e; --accent:#f5793b; --line:#f4d3ac; --edge:#c25e2a; --good:#2a9d5a; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+    nav{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin:6px 0 4px; }
+    nav a{ font-weight:700; font-size:9px; text-decoration:none; color:var(--dim); background:#fff; padding:4px 5px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    nav a.on{ background:var(--accent); color:#fff; }
+    .subtabs{ display:flex; gap:6px; justify-content:center; margin:2px 0 7px; }
+    .subtabs a{ font-weight:700; font-size:10px; text-decoration:none; color:var(--dim); background:#fff; padding:6px 14px; border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    .subtabs a.on{ background:var(--accent); color:#fff; }
+    #app{ width:100%; margin:0; padding:4px 10px 8px; }
+
+    #pager{ display:flex; align-items:center; justify-content:center; gap:12px; margin:2px 0 6px; }
+    #pager button{ font-family:var(--font-body); font-weight:700; font-size:14px; cursor:pointer; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); width:34px; height:30px; }
+    #pager button:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #counter{ font-family:var(--font-title); font-size:10px; color:var(--edge); min-width:66px; text-align:center; }
+
+    .card{ background:var(--panel); border:3px solid var(--edge); padding:11px; }
+    .thead{ display:flex; align-items:center; gap:7px; font-family:var(--font-title); font-size:11px; color:var(--edge); }
+    .cap{ font-family:var(--font-body); font-size:10px; font-weight:700; color:var(--dim); }
+    .badge{ margin-left:auto; font-family:var(--font-body); font-size:9px; font-weight:700; background:var(--good); color:#fff; padding:2px 6px; }
+    .slots{ display:flex; gap:5px; margin:8px 0 9px; align-items:center; }
+    .slot{ width:14px; height:14px; border:2px solid var(--edge); }
+    .slot.full{ background:var(--accent); }
+    .slot.main{ background:var(--good); border-color:var(--good); }
+    .slotlbl{ font-size:10px; color:var(--dim); margin-left:4px; }
+
+    .crow{ display:flex; align-items:center; gap:8px; padding:7px 4px; border-top:2px solid var(--line); }
+    .crow:first-of-type{ border-top:0; }
+    .cemoji{ font-size:22px; width:26px; text-align:center; }
+    .who{ flex:1; min-width:0; }
+    .cname{ font-weight:700; font-size:13px; }
+    .role{ display:block; font-size:9px; color:var(--dim); letter-spacing:.5px; }
+    .btn{ font-family:var(--font-body); font-weight:700; font-size:10px; cursor:pointer; padding:5px 8px; border:2px solid var(--edge); background:#fff; color:var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    .btn:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    .btn.on{ background:var(--accent); color:#fff; }
+    .btn.star.on{ background:var(--good); border-color:var(--good); box-shadow:2px 2px 0 #1c7d45; }
+    .btn:disabled{ opacity:.4; cursor:default; box-shadow:2px 2px 0 var(--edge); }
+    .empty{ text-align:center; color:var(--dim); font-size:11px; padding:22px 8px; }
+    #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:24px; background:#fff; color:var(--accent); border:3px solid var(--accent); box-shadow:3px 3px 0 var(--edge); padding:9px 14px; font-size:12px; display:none; z-index:40; font-weight:700; }
+
+    /* the at-a-glance "who's working" view — lives HERE in the Den, not the chat */
+    #activity{ display:none; flex-wrap:wrap; gap:6px; justify-content:center; margin:0 0 8px; }
+    #activity.on{ display:flex; }
+    #activity .title{ width:100%; text-align:center; font-family:var(--font-title); font-size:9px; color:var(--edge); margin-bottom:1px; }
+    #activity .ap{ display:flex; align-items:center; gap:6px; font-family:var(--font-body); font-weight:700; font-size:10px; color:var(--ink); background:#fff; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:5px 9px; cursor:pointer; }
+    #activity .ap:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #activity .ap .d{ width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1s ease-in-out infinite; }
+    #activity .ap.waiting{ border-color:#d24a3a; }
+    #activity .ap.waiting .d{ background:#d24a3a; animation-duration:.7s; }
+    #activity .ap .st{ color:var(--edge); }
+    @keyframes pulse{ 50%{ opacity:.3; } }
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+</head>
+<body>
+  <div id="app">
+    <nav><a href="/">🦀 Tank</a><a href="/den.html" class="on">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+    <div class="subtabs"><a href="/den.html" class="on">🏠 Tanks</a><a href="/crew.html">🤖 Crew</a><a href="/workshop.html">📋 Projects</a></div>
+    <div id="activity"></div>
+    <div id="pager"><button id="prev">◀</button><span id="counter">— / —</span><button id="next">▶</button></div>
+    <div id="card"></div>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const BIOME = { aquatic: '🌊 OCEAN TANK', vivarium: '🌿 FOREST TANK', desert: '🏜️ DESERT TANK' };
+    const ROLE = { focus: 'Deep Investigator', wit: 'Analyst', speed: 'Scout', charm: 'Communicator', vigor: 'Workhorse' };
+    const roleOf = (st) => ROLE[Object.entries(st).sort((a, b) => b[1] - a[1])[0][0]] || '';
+    let REG = {}, view = null, ti = 0, TOKEN = null;
+    function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2600); }
+
+    async function load() {
+      try {
+        const [tv, spd] = await Promise.all([
+          (await fetch('/api/tanks')).json(),
+          (await fetch('/api/species')).json(),
+        ]);
+        for (const sp of spd.species) REG[sp.id] = sp;
+        view = tv;
+        if (ti >= view.tanks.length) ti = 0;
+        render();
+      } catch { $('card').innerHTML = '<div class="empty">den offline…</div>'; }
+    }
+
+    function render() {
+      if (!view || !view.tanks.length) { $('card').innerHTML = '<div class="empty">no tanks yet</div>'; return; }
+      const t = view.tanks[ti];
+      $('counter').textContent = (ti + 1) + ' / ' + view.tanks.length;
+      const mainHere = !!t.main;
+      const filled = t.residents.length + (mainHere ? 1 : 0);
+
+      // capacity dots
+      let dots = '';
+      for (let i = 0; i < t.capacity; i++) {
+        const cls = (mainHere && i === 0) ? 'slot main' : (i < filled ? 'slot full' : 'slot');
+        dots += `<span class="${cls}"></span>`;
+      }
+
+      // one row per owned friendly creature of this biome
+      const rows = t.candidates.map((id) => {
+        const sp = REG[id]; if (!sp) return '';
+        const isMain = id === view.main;
+        const inTank = t.residents.includes(id);
+        const full = filled >= t.capacity;
+        const star = `<button class="btn star ${isMain ? 'on' : ''}" data-main="${id}" ${isMain ? 'disabled' : ''}>★ ${isMain ? 'main' : 'main'}</button>`;
+        const occ = isMain ? '' :
+          `<button class="btn ${inTank ? 'on' : ''}" data-occ="${id}" ${(!inTank && full) ? 'disabled' : ''}>${inTank ? '✓ in tank' : '+ tank'}</button>`;
+        const give = `<button class="btn give" data-give="${id}" title="give ${sp.name} a task">📨</button>`;
+        const spec = (sp.kit && sp.kit.specialty) || roleOf(sp.stats);
+        return `<div class="crow"><span class="cemoji">${sp.emoji}</span>` +
+          `<span class="who"><span class="cname">${sp.name}</span><span class="role">${spec}${isMain ? ' · ★ your main' : ''}</span></span>` +
+          `${give}${star}${occ}</div>`;
+      }).join('') || '<div class="empty">no creatures live in this biome yet — adopt one in the Shop</div>';
+
+      $('card').innerHTML =
+        `<div class="thead">${BIOME[t.biome] || t.biome} <span class="cap">fits ${t.capacity}</span>${t.active ? '<span class="badge">HERE NOW</span>' : ''}</div>` +
+        `<div class="slots">${dots}<span class="slotlbl">${filled}/${t.capacity} — 🟩 main · 🟧 tank-mate</span></div>` +
+        rows;
+
+      $('card').querySelectorAll('[data-main]').forEach((b) => b.addEventListener('click', () => setMain(b.dataset.main)));
+      $('card').querySelectorAll('[data-occ]').forEach((b) => b.addEventListener('click', () => toggleOcc(t, b.dataset.occ)));
+      // walk up to a Claudémon in its tank and give it a job → opens the Crew chat aimed at it
+      $('card').querySelectorAll('[data-give]').forEach((b) => b.addEventListener('click', () => { location.href = 'crew.html?creature=' + encodeURIComponent(b.dataset.give); }));
+    }
+
+    async function token() { if (!TOKEN) TOKEN = (await (await fetch('/api/lab/token')).json()).token; return TOKEN; }
+    async function post(url, body) {
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': await token() }, body: JSON.stringify(body) });
+      const d = await r.json(); if (d.error) throw new Error(d.error); return d;
+    }
+    async function setMain(id) {
+      try { await post('/api/main', { id }); toast('★ ' + (REG[id] ? REG[id].name : id) + ' is your main'); load(); }
+      catch (e) { toast('⚠ ' + e.message); }
+    }
+    async function toggleOcc(t, id) {
+      const next = t.residents.includes(id) ? t.residents.filter((x) => x !== id) : t.residents.concat([id]);
+      try { await post('/api/tank', { biome: t.biome, ids: next }); load(); }
+      catch (e) { toast('⚠ ' + e.message); }
+    }
+
+    // live "who's working" across every tank — the at-a-glance view; tap → watch in Crew
+    const esc = (s) => String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    async function refreshActivity() {
+      let crew = [];
+      try { crew = (await (await fetch('/api/crew')).json()).crew || []; } catch { return; }
+      const active = crew.filter((c) => c.status === 'working' || c.status === 'waiting');
+      const box = $('activity');
+      if (!active.length) { box.className = ''; box.innerHTML = ''; return; }
+      box.className = 'on';
+      box.innerHTML = '<span class="title">⚡ WORKING NOW — tap to watch</span>' + active.map((c) => {
+        const st = c.status === 'waiting' ? 'needs you ✋' : (c.kind === 'pair' ? 'pairing' : 'working');
+        return `<span class="ap ${c.status}" data-id="${esc(c.id)}" title="${esc(c.task || '')}"><span class="d"></span>${c.emoji} <span class="st">${st}</span></span>`;
+      }).join('');
+      box.querySelectorAll('.ap').forEach((p) => p.addEventListener('click', () => { location.href = 'crew.html?view=' + encodeURIComponent(p.dataset.id); }));
+    }
+    setInterval(refreshActivity, 2500);
+
+    $('prev').addEventListener('click', () => { ti = (ti - 1 + view.tanks.length) % view.tanks.length; render(); });
+    $('next').addEventListener('click', () => { ti = (ti + 1) % view.tanks.length; render(); });
+    window.addEventListener('cb-nav', (e) => {
+      if (e.detail === 'left') { e.preventDefault(); $('prev').click(); }
+      else if (e.detail === 'right') { e.preventDefault(); $('next').click(); }
+    });
+
+    load();
+    refreshActivity();
+  </script>
+</body>
+</html>

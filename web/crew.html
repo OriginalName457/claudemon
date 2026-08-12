@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon — Crew</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%A4%96%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    :root{ --bg:#fff6ec; --panel:#fff; --ink:#3a2617; --dim:#b07d4e; --accent:#f5793b; --line:#f4d3ac; --edge:#c25e2a; --good:#2a9d5a; --bad:#d24a3a; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+    nav{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin:6px 0 4px; }
+    nav a{ font-weight:700; font-size:9px; text-decoration:none; color:var(--dim); background:#fff; padding:4px 5px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    nav a.on{ background:var(--accent); color:#fff; }
+    .subtabs{ display:flex; gap:6px; justify-content:center; margin:2px 0 6px; }
+    .subtabs a{ font-weight:700; font-size:10px; text-decoration:none; color:var(--dim); background:#fff; padding:6px 14px; border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    .subtabs a.on{ background:var(--accent); color:#fff; }
+    #app{ display:flex; flex-direction:column; height:100%; padding:4px 9px 8px; min-height:0; }
+
+    #ctl{ display:flex; gap:5px; margin-bottom:6px; }
+    #who{ flex:1.5; font-family:var(--font-body); font-weight:700; font-size:10px; padding:5px 4px; border:2px solid var(--edge); background:#fff; color:var(--ink); }
+    #folderbtn{ flex:1; display:flex; align-items:center; gap:4px; font-family:var(--font-body); font-weight:700; font-size:10px; cursor:pointer; background:#fff; color:var(--edge); border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:5px 7px; overflow:hidden; }
+    #folderbtn:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #folderlbl{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    /* the selected specialist's "go-to for X" line — shows who's on the job */
+    #kithint{ font-family:var(--font-body); font-weight:700; font-size:9px; color:var(--dim); margin:-1px 2px 6px; min-height:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    #stream{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding:4px 2px; min-height:0; }
+    .bubble{ background:#fff; border:3px solid var(--edge); padding:8px 10px; font-size:12px; line-height:1.5; white-space:pre-wrap; }
+    .bubble .nm{ font-family:var(--font-title); font-size:9px; color:var(--edge); display:block; margin-bottom:4px; }
+    .you{ align-self:flex-end; background:var(--accent); color:#fff; border-color:var(--edge); max-width:85%; }
+    .tool{ font-family:var(--font-body); font-weight:700; font-size:10px; color:var(--dim); align-self:flex-start; }
+    .tool b{ color:var(--edge); }
+    .sysline{ text-align:center; font-size:9px; color:var(--dim); }
+    .sysline b{ color:var(--edge); } .sysline i{ color:var(--dim); font-style:normal; }
+    .chip{ align-self:center; font-family:var(--font-title); font-size:9px; padding:3px 8px; border:2px solid; }
+    .chip.done{ color:var(--good); border-color:var(--good); }
+    .chip.failed{ color:var(--bad); border-color:var(--bad); }
+    .blocked{ align-self:center; font-family:var(--font-title); font-size:9px; color:var(--bad); border:2px solid var(--bad); padding:3px 8px; }
+    .handoff{ align-self:center; font-family:var(--font-title); font-size:11px; color:var(--edge); background:#fff6e9; border:3px solid var(--accent); box-shadow:2px 2px 0 var(--edge); padding:8px 14px; margin:3px 0; animation:pass .5s ease; }
+    @keyframes pass{ from{ transform:translateX(-8px); opacity:.3; } to{ transform:none; opacity:1; } }
+    .perm{ align-self:stretch; background:#fff6e9; border:3px solid var(--accent); box-shadow:3px 3px 0 var(--edge); padding:9px 10px; }
+    .perm .q{ font-weight:700; font-size:12px; margin-bottom:5px; }
+    .perm .det{ font-family:ui-monospace,Consolas,monospace; font-size:10px; color:#3a2617; white-space:pre-wrap; word-break:break-word; margin-bottom:8px; max-height:90px; overflow-y:auto; background:#fff; border:2px solid var(--line); padding:5px 7px; }
+    .perm .row{ display:flex; gap:8px; }
+    .perm button{ flex:1; font-family:var(--font-body); font-weight:700; font-size:11px; cursor:pointer; padding:8px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    .perm .ok{ background:var(--good); color:#fff; border-color:#1c7d45; }
+    .perm .no{ background:#fff; color:var(--bad); }
+    .perm.answered{ opacity:.55; }
+
+    /* delivery card: where a pair's isolated work landed */
+    .deliver{ align-self:stretch; background:#eafaef; border:3px solid var(--good); box-shadow:2px 2px 0 #1c7d45; padding:8px 10px; font-size:11px; color:#1c5a34; }
+    .deliver code{ font-family:ui-monospace,Consolas,monospace; background:#fff; border:1px solid var(--good); padding:1px 4px; }
+    .deliver .sub{ display:block; margin-top:4px; font-size:9px; color:#3a2617; }
+
+    #inbar{ display:flex; gap:6px; margin-top:6px; }
+    #box{ flex:1; font-family:var(--font-body); font-size:12px; padding:8px 10px; border:3px solid var(--edge); background:#fff8ef; color:var(--ink); }
+    #send{ font-family:var(--font-body); font-weight:700; font-size:12px; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:8px 12px; cursor:pointer; }
+    #send:disabled{ background:#f0d8c4; }
+    #mic{ font-size:14px; cursor:pointer; background:#fff; color:var(--edge); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:6px 9px; user-select:none; }
+    #mic:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #mic.rec{ background:var(--bad); color:#fff; border-color:var(--bad); animation:pulse .8s ease-in-out infinite; }
+    #mic.busy{ opacity:.5; }
+
+    /* the reflective status bar — a small mode-toggle button on the left, then live status text */
+    #statusbar{ display:flex; align-items:center; gap:7px; margin-top:7px; font-family:var(--font-body); font-weight:700; font-size:9px; color:#6a4f36; padding:2px 2px; white-space:nowrap; overflow:hidden; }
+    #modetoggle{ flex:0 0 auto; font-family:var(--font-body); font-weight:700; font-size:9px; cursor:pointer; background:#fff; color:var(--edge); border:2px solid var(--edge); box-shadow:1px 1px 0 var(--edge); padding:3px 7px; user-select:none; }
+    #modetoggle:active{ transform:translate(1px,1px); box-shadow:0 0 0; }
+    #statusbar .sdot{ width:8px; height:8px; border-radius:50%; background:#b9a58c; flex:0 0 auto; }
+    #statusbar.ready .sdot,#statusbar.done .sdot{ background:var(--good); }
+    #statusbar.working .sdot{ background:var(--accent); animation:pulse 1s ease-in-out infinite; }
+    #statusbar.waiting .sdot{ background:var(--bad); animation:pulse .7s ease-in-out infinite; }
+    #statusbar.failed .sdot{ background:var(--bad); }
+    @keyframes pulse{ 50%{ opacity:.3; } }
+    /* browser co-pilot toggle — sits by the mode toggle */
+    #browsertoggle{ flex:0 0 auto; font-family:var(--font-body); font-weight:700; font-size:9px; cursor:pointer; background:#fff; color:var(--dim); border:2px solid var(--edge); box-shadow:1px 1px 0 var(--edge); padding:3px 7px; user-select:none; }
+    #browsertoggle:active{ transform:translate(1px,1px); box-shadow:0 0 0; }
+    #browsertoggle.on{ background:var(--accent); color:#fff; }
+
+    /* hand-off card: the pet needs YOU (a login, a decision, take the wheel) */
+    .help{ align-self:stretch; background:#fff6e9; border:3px solid var(--accent); box-shadow:3px 3px 0 var(--edge); padding:9px 10px; }
+    .help .q{ font-weight:700; font-size:12px; margin-bottom:4px; }
+    .help .ctx{ font-size:10px; color:var(--dim); margin-bottom:7px; white-space:pre-wrap; }
+    .help .row{ display:flex; gap:6px; }
+    .help input{ flex:1; font-family:var(--font-body); font-size:11px; padding:7px 8px; border:2px solid var(--edge); background:#fff; color:var(--ink); }
+    .help button{ flex:0 0 auto; font-family:var(--font-body); font-weight:700; font-size:11px; cursor:pointer; padding:7px 10px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); background:var(--good); color:#fff; }
+    .help.answered{ opacity:.55; }
+
+    /* in-app folder browser */
+    #fbmodal{ position:absolute; inset:0; background:rgba(58,38,23,.55); display:flex; align-items:center; justify-content:center; z-index:30; padding:14px; }
+    #fbmodal.hidden{ display:none; }
+    .fb{ width:100%; max-width:440px; max-height:90%; background:var(--panel); border:3px solid var(--edge); box-shadow:4px 4px 0 var(--edge); display:flex; flex-direction:column; }
+    .fbhead{ font-family:var(--font-title); font-size:10px; color:var(--edge); padding:9px 10px; border-bottom:2px solid var(--line); }
+    .fbpath{ font-family:var(--font-body); font-weight:700; font-size:10px; color:var(--dim); padding:6px 10px; word-break:break-all; background:#fff8ef; border-bottom:2px solid var(--line); }
+    .fblist{ flex:1; overflow-y:auto; min-height:120px; }
+    .fbitem{ display:flex; align-items:center; gap:2px; padding:8px 11px; font-size:12px; cursor:pointer; border-top:1px solid var(--line); color:var(--ink); }
+    .fbitem:first-child{ border-top:0; }
+    .fbitem:active{ background:#fff3e6; }
+    .fblist .empty{ padding:18px 12px; text-align:center; color:var(--dim); font-size:11px; }
+    .fbrow{ display:flex; gap:5px; padding:8px; border-top:2px solid var(--line); }
+    .fbrow button{ flex:1; font-family:var(--font-body); font-weight:700; font-size:10px; cursor:pointer; padding:8px 4px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); background:#fff; color:var(--edge); }
+    .fbrow button:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #fbuse{ background:var(--good)!important; color:#fff!important; border-color:#1c7d45!important; box-shadow:2px 2px 0 #1c7d45!important; }
+
+    /* the team standup: the rally + who's taking what */
+    .standup{ align-self:stretch; background:#fff6e9; border:3px solid var(--accent); box-shadow:3px 3px 0 var(--edge); padding:9px 10px; }
+    .standup .rally{ font-weight:700; font-size:12px; margin-bottom:6px; }
+    .standup .syn{ font-family:var(--font-title); font-size:8px; color:var(--good); border:2px solid var(--good); padding:2px 6px; margin-bottom:7px; display:inline-block; }
+    .standup .asg{ display:flex; gap:7px; font-size:10px; padding:5px 0; border-top:1px solid var(--line); }
+    .standup .asg:first-of-type{ border-top:0; }
+    .standup .aname{ font-weight:700; color:var(--edge); }
+    .standup .aspec{ color:var(--dim); }
+    .standup .atask{ color:#3a2617; }
+
+    /* the Main's closing wrap-up */
+    .synthesis{ align-self:stretch; background:#eafaef; border:3px solid var(--good); box-shadow:3px 3px 0 #1c7d45; padding:9px 10px; font-size:12px; color:#1c5a34; line-height:1.45; }
+    .synthesis .hd{ font-family:var(--font-title); font-size:9px; color:#1c7d45; display:block; margin-bottom:5px; }
+    .synthesis .br{ display:block; margin-top:6px; font-size:9px; color:#3a2617; }
+    .synthesis code{ font-family:ui-monospace,Consolas,monospace; background:#fff; border:1px solid var(--good); padding:1px 4px; }
+
+    /* the crew scene — a compact "who's doing what" for team runs */
+    .crewpanel{ align-self:stretch; background:var(--panel); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:8px 9px; }
+    .crewhead{ font-family:var(--font-title); font-size:8px; color:var(--edge); margin-bottom:7px; text-align:center; }
+    .crewhead .synb{ color:var(--good); border:1px solid var(--good); padding:1px 4px; margin-left:4px; }
+    .flow{ display:flex; align-items:flex-start; justify-content:center; gap:2px; margin-bottom:9px; }
+    .flow .w{ display:flex; flex-direction:column; align-items:center; gap:3px; width:38px; }
+    .flow .we{ font-size:24px; line-height:1; transition:transform .2s; }
+    .flow .w.working .we{ animation:wbob 1.1s ease-in-out infinite; }
+    @keyframes wbob{ 50%{ transform:translateY(-3px); } }
+    .flow .wd{ width:7px; height:7px; border-radius:50%; background:#cdb; box-shadow:0 0 0 2px #fff, 0 0 0 3px var(--line); }
+    .flow .w.working .wd{ background:var(--accent); animation:pulse 1s ease-in-out infinite; }
+    .flow .w.done .wd{ background:var(--good); }
+    .flow .warr{ color:var(--dim); font-size:13px; margin-top:8px; }
+    .flow .warr.hot{ color:var(--accent); }
+    .wls{ display:flex; flex-direction:column; gap:5px; }
+    .wl{ font-size:11px; line-height:1.3; display:flex; gap:5px; align-items:baseline; }
+    .wl .wn{ flex:0 0 auto; color:var(--edge); font-weight:700; }
+    .wl .ws{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#5a4636; }
+    .wl.done .ws{ color:var(--good); }
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+  <script src="/voice.js?v=2"></script>
+</head>
+<body>
+  <div id="app">
+    <nav><a href="/">🦀 Tank</a><a href="/den.html" class="on">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+    <div class="subtabs"><a href="/den.html">🏠 Tanks</a><a href="/crew.html" class="on">🤖 Crew</a><a href="/workshop.html">📋 Projects</a></div>
+    <div id="ctl">
+      <select id="who"></select>
+      <button id="folderbtn" title="choose the folder your Claudémon works out of — like opening the terminal there">📁 <span id="folderlbl">work folder</span></button>
+    </div>
+    <div id="kithint"></div>
+    <div id="stream"></div>
+    <div id="inbar">
+      <input id="box" placeholder="give a Claudémon a task…" autocomplete="off" />
+      <button id="mic" title="tap to talk (tap again to stop)">🎤</button>
+      <button id="send">Send</button>
+    </div>
+    <div id="statusbar" class="ready"><button id="modetoggle" title="tap to switch mode (Plan → Manual → Auto)">🗺️ Plan</button><button id="browsertoggle" title="give this Claudémon a real, visible browser to drive (you can watch + co-pilot)">🌐 off</button><span class="sdot"></span><span id="stxt">booting…</span></div>
+
+    <div id="fbmodal" class="hidden">
+      <div class="fb">
+        <div class="fbhead">📁 PICK YOUR PROJECT FOLDER</div>
+        <div class="fbpath" id="fbpath">—</div>
+        <div class="fblist" id="fblist"></div>
+        <div class="fbrow">
+          <button id="fbup">⬆ up</button>
+          <button id="fbtype">⌨ type</button>
+          <button id="fbcancel">✕ cancel</button>
+          <button id="fbuse">✓ use this</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const stream = $('stream');
+    const esc = (s) => String(s).replace(/</g, '&lt;');
+    const fname = (p) => { const m = String(p || '').replace(/[\\/]+$/, '').split(/[\\/]/); return m[m.length - 1] || (p || '—'); };
+    let REG = {}, OWNED = [], MAIN = null, TOKEN = null, es = null, curBubble = null, curCreatureId = null, turnBusy = false;
+    let MODE = 'plan', FOLDER = '', sending = false, WATCHING = null, BROWSER = false;
+    let TEAMVIEW = false, WMAP = {};   // the compact crew scene: creatureId → {w, dot, say}
+
+    // ---- the reflective status bar ----
+    const MODE_LBL = { plan: '🗺️ Plan', manual: '✋ Manual', auto: '⚡ Auto' };
+    function status(state, extra) {
+      $('modetoggle').textContent = MODE_LBL[MODE];
+      let cls = 'ready', s;
+      if (state === 'working') { cls = 'working'; s = `${extra || 'working'}…`; }
+      else if (state === 'waiting') { cls = 'waiting'; s = 'needs your OK ✋'; }
+      else if (state === 'done') { cls = 'done'; s = `done · 📁 ${fname(FOLDER)}`; }
+      else if (state === 'failed') { cls = 'failed'; s = `snag · 📁 ${fname(FOLDER)}`; }
+      else { cls = 'ready'; s = `ready · 📁 ${fname(FOLDER)}`; }
+      $('statusbar').className = cls; $('stxt').textContent = s;
+    }
+
+    (async () => {
+      const [spd, st] = await Promise.all([(await fetch('/api/species')).json(), (await fetch('/api/state')).json()]);
+      for (const sp of spd.species) REG[sp.id] = sp;
+      OWNED = [st.starter, ...(st.roster || [])].filter((id, i, a) => id && REG[id] && REG[id].faction === 'friendly' && a.indexOf(id) === i);
+      MAIN = (st.main && REG[st.main]) ? st.main : (st.starter || OWNED[0]);
+      const trio = bestTrio();
+      const opts = [
+        `<option value="main">👑 ${REG[MAIN] ? REG[MAIN].name : 'Your main'} — your main dude</option>`,
+        '<option value="keeper">🧭 Keeper picks the specialist</option>',
+        ...OWNED.map(id => { const k = REG[id].kit; return `<option value="${id}">${REG[id].emoji} ${REG[id].name}${k ? ' — ' + k.specialty : ''}</option>`; }),
+      ];
+      if (trio.length >= 2) opts.push(`<option value="besttrio">🏆 Best trio — ${trio.map(id => REG[id].emoji).join('')} ${trio.length >= 3 ? 'full synergy' : 'strongest'}</option>`);
+      if (OWNED.length >= 2) opts.push('<option value="pair">🤝 Pair two</option>', `<option value="team">🎪 Team — ${REG[MAIN] ? REG[MAIN].name : 'Main'} leads</option>`);
+      $('who').innerHTML = opts.join('');
+      // default to the crew's tidy WORKSPACE so finished work lands somewhere cohesive
+      try { const w = await (await fetch('/api/workspace')).json(); if (w && w.root) FOLDER = w.root; } catch {}
+      if (!FOLDER) { try { const p = await (await fetch('/api/paths')).json(); if (p && p.cwd) FOLDER = p.cwd; } catch {} }
+      const q = new URLSearchParams(location.search);
+      if (q.get('creature') && REG[q.get('creature')]) $('who').value = q.get('creature');
+      // arrive pre-equipped for whoever's selected
+      const cur0 = $('who').value;
+      if (cur0 === 'main') { applyKit(MAIN); $('kithint').textContent = '👑 your main dude — rallies the crew if it\'s a big one'; }
+      else if (cur0 === 'keeper') $('kithint').textContent = '🧭 tell me the task — I\'ll pick + equip the right specialist';
+      else if (cur0 === 'pair') $('kithint').textContent = '🤝 a planner + a doer, matched to the job';
+      else if (cur0 === 'besttrio') $('kithint').textContent = '🏆 the strongest specialist from each biome — full synergy';
+      else applyKit(cur0);
+      if (['plan', 'manual', 'auto'].includes(q.get('mode'))) setMode(q.get('mode'));   // explicit deep-link mode wins
+      if (q.get('cwd')) FOLDER = q.get('cwd');
+      $('folderlbl').textContent = fname(FOLDER);
+      status('ready');
+      if (q.get('view')) { viewSession(q.get('view')); return; }   // from the Den: watch a running pet
+      if (q.get('task')) { $('box').value = q.get('task'); setTimeout(send, 500); }
+    })();
+
+    function line(cls, html) { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; stream.appendChild(d); stream.scrollTop = stream.scrollHeight; return d; }
+    async function token() { if (!TOKEN) TOKEN = (await (await fetch('/api/lab/token')).json()).token; return TOKEN; }
+    async function post(url, body) { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': await token() }, body: JSON.stringify(body) }); return r.json(); }
+
+    // ---- mode toggle button (left of the status bar) + folder ----
+    function setMode(m) { MODE = m; $('modetoggle').textContent = MODE_LBL[MODE]; if (!turnBusy) status('ready'); }
+    function setBrowser(b) { BROWSER = !!b; const el = $('browsertoggle'); el.textContent = BROWSER ? '🌐 on' : '🌐 off'; el.classList.toggle('on', BROWSER); }
+    // when you pick a specialist, arrive pre-equipped: preset its default mode + browser
+    // and show what it's the go-to for (all overridable — just tap the toggles).
+    function applyKit(id) {
+      const k = REG[id] && REG[id].kit;
+      if (!k) { $('kithint').textContent = ''; return; }
+      setMode(k.defaultMode || MODE); setBrowser(!!k.browser);
+      $('kithint').textContent = `${REG[id].emoji} ${k.specialty} — go-to for ${k.goto}`;
+    }
+    $('modetoggle').addEventListener('click', () => { const order = ['plan', 'manual', 'auto']; setMode(order[(order.indexOf(MODE) + 1) % order.length]); });
+    $('browsertoggle').addEventListener('click', () => setBrowser(!BROWSER));
+    // ---- in-app folder browser (navigate the filesystem, click to pick) ----
+    let fbPath = '', fbParent = null;
+    async function fbGo(p) {
+      let d; try { d = await (await fetch('/api/listdir?path=' + encodeURIComponent(p || ''))).json(); } catch { return; }
+      fbPath = d.path; fbParent = d.parent;
+      $('fbpath').textContent = '📂 ' + d.path;
+      const list = $('fblist');
+      if (!d.dirs || !d.dirs.length) { list.innerHTML = '<div class="empty">no sub-folders here — use this folder, or go up</div>'; }
+      else {
+        list.innerHTML = d.dirs.map((x, i) => `<div class="fbitem" data-i="${i}">📁 ${esc(x.name)}</div>`).join('');
+        list.querySelectorAll('.fbitem').forEach((el) => el.addEventListener('click', () => fbGo(d.dirs[+el.dataset.i].path)));
+      }
+      $('fbup').style.visibility = (d.parent != null) ? 'visible' : 'hidden';
+      $('fbuse').style.visibility = (fbPath && fbPath !== 'This PC') ? 'visible' : 'hidden';
+    }
+    function openBrowser() { $('fbmodal').classList.remove('hidden'); fbGo(FOLDER || ''); }
+    $('folderbtn').addEventListener('click', openBrowser);
+    $('fbup').addEventListener('click', () => { if (fbParent != null) fbGo(fbParent); });
+    $('fbcancel').addEventListener('click', () => $('fbmodal').classList.add('hidden'));
+    $('fbtype').addEventListener('click', () => { const t = prompt('Or paste the full folder path:', fbPath !== 'This PC' ? fbPath : FOLDER); if (t && t.trim()) fbGo(t.trim()); });
+    $('fbuse').addEventListener('click', () => {
+      if (fbPath && fbPath !== 'This PC') { FOLDER = fbPath; $('folderlbl').textContent = fname(FOLDER); if (!turnBusy) status('ready'); line('sysline', `📁 working folder set: ${fbPath}`); }
+      $('fbmodal').classList.add('hidden');
+    });
+
+    // ---- stream a turn into the running conversation ----
+    function endTurn() { if (es) { es.close(); es = null; } turnBusy = false; WATCHING = null; $('box').focus(); }
+    function attachStream(id, defaultSp) {
+      if (es) { es.close(); es = null; }   // stop watching the previous one — it keeps running in the background
+      curBubble = null; curCreatureId = null; turnBusy = true; WATCHING = id; TEAMVIEW = false; WMAP = {};
+      es = new EventSource('/api/agent/stream?id=' + encodeURIComponent(id));
+      es.onmessage = (m) => {
+        let ev; try { ev = JSON.parse(m.data); } catch { return; }
+        const c = ev.creature || defaultSp || {};
+        const mine = TEAMVIEW && c && c.id && WMAP[c.id];   // a teammate in the crew scene
+        if (ev.t === 'pair') line('sysline', `🤝 <b>${ev.navigator.emoji} ${esc(ev.navigator.name)}</b> <i>${esc(ev.navigator.role || 'Navigator')}</i> pairs with <b>${ev.driver.emoji} ${esc(ev.driver.name)}</b> <i>${esc(ev.driver.role || 'Driver')}</i>`);
+        else if (ev.t === 'handoff') { curBubble = null; curCreatureId = null; if (!TEAMVIEW) line('handoff', `${ev.from.emoji} ${esc(ev.from.name)} &nbsp;→&nbsp; ${ev.to.emoji} ${esc(ev.to.name)}`); }
+        else if (ev.t === 'note') { if (!TEAMVIEW || !/isolated on|works isolated/.test(ev.text || '')) line('sysline', esc(shortText(ev.text, 64))); }
+        else if (ev.t === 'team') line('sysline', `🎪 ${esc(ev.lead.name)} is gathering the crew`);
+        else if (ev.t === 'standup') showCrewPanel(ev);
+        else if (ev.t === 'synthesis') showSynthesis(ev);
+        else if (ev.t === 'delivered') { if (TEAMVIEW && WMAP[ev.who]) markWorker(ev.who, 'done', 'done'); else line('deliver', `📦 ${ev.emoji ? esc(ev.emoji + ' ' + (ev.name || '')) + ' delivered' : 'Delivered'} on <code>${esc(ev.branch)}</code><span class="sub">isolated — review with <code>git diff master..${esc(ev.branch)}</code>, then merge.</span>`); }
+        else if (ev.t === 'thinking') { if (mine) sayWorker(c.id, 'thinking'); else if (!curBubble) line('tool', `${(c && c.emoji) || '🤔'} thinking…`); }
+        else if (ev.t === 'tool') {
+          const t = ev.name === 'Bash' ? 'running ' + shortCmd(ev.input) : (ev.name === 'Edit' || ev.name === 'Write' || ev.name === 'MultiEdit') ? 'writing ' + shortFile(ev.input) : ev.name === 'Read' ? 'reading ' + shortFile(ev.input) : 'looking things up';
+          if (mine) sayWorker(c.id, t); else { curBubble = null; line('tool', `<b>${ev.name}</b> ${esc(t)}`); }
+        }
+        else if (ev.t === 'text') {
+          if (mine) { mine._buf = (mine._buf || '') + ev.text; sayWorker(c.id, lastLine(mine._buf)); }
+          else {
+            if (!curBubble || (c && curCreatureId !== c.id)) { curBubble = line('bubble', `<span class="nm">${(c && c.emoji) || '🤖'} ${(c && c.name) || 'Claudémon'}</span><span class="tx"></span>`); curCreatureId = c ? c.id : null; }
+            curBubble.querySelector('.tx').textContent += ev.text; stream.scrollTop = stream.scrollHeight;
+          }
+        }
+        else if (ev.t === 'permission') { showPerm(ev); curBubble = null; }
+        else if (ev.t === 'permission_done') { const x = document.getElementById('perm-' + ev.id); if (x) { x.classList.add('answered'); x.querySelectorAll('button').forEach(b => b.disabled = true); } }
+        else if (ev.t === 'help') { showHelp(ev, c); curBubble = null; }
+        else if (ev.t === 'help_done') { const x = document.getElementById('help-' + ev.id); if (x) { x.classList.add('answered'); x.querySelectorAll('input,button').forEach(b => b.disabled = true); } }
+        else if (ev.t === 'blocked') line('blocked', `🛡️ safety blocked: ${ev.tool}`);
+        else if (ev.t === 'result') { if (!TEAMVIEW) { const tk = ev.tokens && ev.tokens.total; if (tk) line('sysline', `⚡ ${tk.toLocaleString()} tokens of energy${typeof ev.cost === 'number' ? ` (≈$${ev.cost.toFixed(3)})` : ''}`); else if (typeof ev.cost === 'number') line('sysline', `⚡ used $${ev.cost.toFixed(4)} of your energy`); } }
+        else if (ev.t === 'status') {
+          if (ev.creature && ev.creature.id) { if (TEAMVIEW) markWorker(ev.creature.id, ev.status); }   // a teammate's status — updates the scene, never ends the view
+          else if (ev.status === 'waiting') { line('sysline', 'waiting for your call'); status('waiting'); }
+          else if (ev.status === 'working') { status('working', (c && c.name) || 'working'); }
+          else if (ev.status === 'done') { status('done'); endTurn(); }
+          else if (ev.status === 'failed') { line('chip failed', 'hit a snag'); status('failed'); endTurn(); }
+          else if (ev.status === 'stopped') { line('chip failed', '■ stopped'); status('ready'); endTurn(); }
+        }
+      };
+      es.onerror = () => { status('ready'); endTurn(); };
+    }
+
+    function showPerm(ev) {
+      const inp = ev.input || {};
+      let summary;
+      if (ev.tool === 'Bash') summary = '$ ' + (inp.command || '');
+      else if (ev.tool === 'Write') summary = '📝 ' + (inp.file_path || '') + '\n\n' + String(inp.content || '').slice(0, 400);
+      else if (ev.tool === 'Edit' || ev.tool === 'MultiEdit') summary = '✏️ ' + (inp.file_path || '') + '\n- ' + String(inp.old_string || '').slice(0, 160) + '\n+ ' + String(inp.new_string || '').slice(0, 160);
+      else summary = JSON.stringify(inp).slice(0, 400);
+      const card = document.createElement('div');
+      card.className = 'perm'; card.id = 'perm-' + ev.id;
+      card.innerHTML = `<div class="q">✋ can I use <b>${esc(ev.tool)}</b>?</div><div class="det">${esc(summary)}</div><div class="row"><button class="ok">✓ Approve</button><button class="no">✕ Deny</button></div>`;
+      stream.appendChild(card); stream.scrollTop = stream.scrollHeight;
+      card.querySelector('.ok').addEventListener('click', () => answerPerm(ev.id, true, card));
+      card.querySelector('.no').addEventListener('click', () => answerPerm(ev.id, false, card));
+    }
+    async function answerPerm(id, allow, card) {
+      card.classList.add('answered'); card.querySelectorAll('button').forEach(b => b.disabled = true);
+      try { await post('/api/agent/permission/answer', { id, allow }); } catch {}
+    }
+
+    // ---- hand-off: the pet is stuck and needs YOU (a login, a decision, take over) ----
+    function showHelp(ev, c) {
+      const who = (c && c.name) ? `${c.emoji} ${esc(c.name)}` : '🙋 Your Claudémon';
+      const card = document.createElement('div');
+      card.className = 'help'; card.id = 'help-' + ev.id;
+      card.innerHTML = `<div class="q">🙋 ${who} needs you</div>` +
+        `<div class="ctx">${esc(ev.question)}${ev.context ? '\n\n' + esc(ev.context) : ''}</div>` +
+        `<div class="row"><input class="ans" placeholder="type your reply… (or ‘done, continue’)" /><button class="rep">↩ Reply</button></div>`;
+      stream.appendChild(card); stream.scrollTop = stream.scrollHeight;
+      const input = card.querySelector('.ans');
+      const go = () => answerHelp(ev.id, input.value, card);
+      card.querySelector('.rep').addEventListener('click', go);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+      setTimeout(() => input.focus(), 30);
+    }
+    async function answerHelp(id, answer, card) {
+      card.classList.add('answered'); card.querySelectorAll('input,button').forEach(b => b.disabled = true);
+      try { await post('/api/agent/handoff/answer', { id, answer }); } catch {}
+    }
+
+    // ---- the crew scene: worker icons on a pathway + a short line each ----
+    function showCrewPanel(ev) {
+      TEAMVIEW = true; WMAP = {};
+      const a = ev.assignments || [];
+      const flow = a.map((x) => `<span class="w" id="w-${esc(x.creatureId)}"><span class="we">${x.emoji}</span><span class="wd"></span></span>`).join('<span class="warr">▸</span>');
+      const wls = a.map((x) => `<div class="wl" id="wl-${esc(x.creatureId)}"><span class="wn">${x.emoji} ${esc(x.name)}</span><span class="ws">${esc(shortText(x.task, 40))}</span></div>`).join('');
+      const syn = ev.synergy ? '<span class="synb">FULL SYNERGY</span>' : '';
+      const card = line('crewpanel', `<div class="crewhead">${esc(shortText(ev.text, 54))}${syn}</div><div class="flow">${flow}</div><div class="wls">${wls}</div>`);
+      a.forEach((x) => { const w = document.getElementById('w-' + x.creatureId), wl = document.getElementById('wl-' + x.creatureId); WMAP[x.creatureId] = { w, dot: w && w.querySelector('.wd'), say: wl && wl.querySelector('.ws'), wl, _buf: '' }; });
+    }
+    function markWorker(id, st) {
+      const m = WMAP[id]; if (!m || !m.w) return;
+      m.w.classList.toggle('working', st === 'working');
+      if (st === 'done' || st === 'stopped') { m.w.classList.remove('working'); m.w.classList.add('done'); if (m.wl) m.wl.classList.add('done'); if (m.say) m.say.textContent = 'done'; }
+      else if (st === 'failed') { m.w.classList.remove('working'); if (m.say) m.say.textContent = 'hit a snag'; }
+    }
+    function sayWorker(id, text) {
+      const m = WMAP[id]; if (!m) return; if (m.w) m.w.classList.add('working');
+      if (m.say && text) m.say.textContent = shortText(text, 44);
+    }
+    function showSynthesis(ev) {
+      // mark everyone done, then a tiny plain wrap-up
+      Object.keys(WMAP).forEach((id) => markWorker(id, 'done'));
+      const br = (ev.branches && ev.branches.length) ? `<span class="br">branches: ${ev.branches.map(b => `<code>${esc(b.branch)}</code>`).join(' · ')}</span>` : '';
+      line('synthesis', `<span class="hd">🎪 ${ev.lead ? esc(ev.lead.name) : 'crew'} — done</span>${esc(shortText(ev.text, 220))}${br}`);
+    }
+    // ---- text shorteners so nothing overflows the little screen ----
+    function shortText(t, n) { t = String(t || '').replace(/[*_`#>~]/g, '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1).trim() + '…' : t; }
+    function lastLine(buf) { const parts = String(buf || '').replace(/[*_`#>~]/g, '').split(/[\n.!?]+/).map(s => s.trim()).filter(Boolean); return parts.length ? parts[parts.length - 1] : ''; }
+    function shortFile(input) { try { const p = (input && (input.file_path || input.path)) || ''; return p.split(/[\\/]/).pop() || 'a file'; } catch { return 'a file'; } }
+    function shortCmd(input) { try { const c = String((input && (input.command || input.cmd)) || '').trim(); return c.split(/\s+/).slice(0, 2).join(' ') || 'a command'; } catch { return 'a command'; } }
+
+    // ---- dispatchers (reused by send() + the Main's solo/team choice) ----
+    const failLine = (m) => { line('sysline', m); status('failed'); sending = false; };
+    async function runSolo(creatureId, task) {
+      const sp = REG[creatureId] || {}; status('working', sp.name);
+      try { const d = await post('/api/agent/spawn', { creatureId, mode: MODE, cwd: FOLDER, task, browser: BROWSER }); if (d.error) return failLine('⚠ ' + d.error); attachStream(d.id, sp); }
+      catch { return failLine('couldn’t reach the server'); }
+      sending = false;
+    }
+    async function runTeam(task, memberIds) {
+      status('working', memberIds ? 'the trophy trio' : 'the crew');
+      try { const d = await post('/api/agent/team', { cwd: FOLDER, mode: MODE, task, memberIds }); if (d.error) return failLine('⚠ ' + d.error); attachStream(d.id, null); }
+      catch { return failLine('couldn’t reach the server'); }
+      sending = false;
+    }
+    // The strongest owned specialist per biome → a full-synergy trio (the panel's #1 shape).
+    function bestTrio() {
+      const RANK = { legendary: 5, rare: 4, uncommon: 3, common: 2, starter: 2 };
+      const byBiome = {};
+      for (const id of OWNED) { const sp = REG[id]; if (!sp) continue; const score = (RANK[sp.rarity] || 1) * 100 + (sp.stats ? Object.values(sp.stats).reduce((n, v) => n + v, 0) : 0); if (!byBiome[sp.biome] || score > byBiome[sp.biome].score) byBiome[sp.biome] = { id, score }; }
+      return Object.values(byBiome).sort((a, b) => b.score - a.score).slice(0, 3).map((x) => x.id);
+    }
+    // Does this sound like a real project (worth rallying the crew)?
+    function looksBig(task) {
+      if (task.length > 140) return true;
+      const words = task.split(/\s+/).length;
+      return words > 6 && /\b(build|create|make me|app|website|web ?app|project|system|platform|vibe.?cod|implement|whole|entire|full|migrate|dashboard|pipeline|end.?to.?end|feature|game|tool|bot)\b/i.test(task);
+    }
+    // The Main asks: handle it myself, or rally a team?
+    function askSoloOrTeam(task) {
+      const lead = REG[MAIN] || {};
+      const card = document.createElement('div'); card.className = 'perm';
+      card.innerHTML = `<div class="q">👑 ${esc(((lead.emoji || '') + ' ' + (lead.name || 'Your main')).trim())} — this looks like a real project</div>` +
+        `<div class="det">Want me to rally the crew on it, or take it solo?</div>` +
+        `<div class="row"><button class="ok">🎪 Rally the crew</button><button class="no">🦀 Just me</button></div>`;
+      stream.appendChild(card); stream.scrollTop = stream.scrollHeight;
+      const lock = () => { card.classList.add('answered'); card.querySelectorAll('button').forEach(b => b.disabled = true); };
+      card.querySelector('.ok').addEventListener('click', () => { lock(); sending = true; runTeam(task); });
+      card.querySelector('.no').addEventListener('click', () => { lock(); sending = true; runSolo(MAIN, task); });
+    }
+
+    // ---- give a task ----
+    async function send() {
+      const task = $('box').value.trim(); if (!task || sending) return;
+      let creatureId = $('who').value;
+      // launching while watching a run backgrounds the current one (find it in the Den)
+      if (turnBusy) { if (es) { es.close(); es = null; } stream.innerHTML = ''; curBubble = null; curCreatureId = null; turnBusy = false; WATCHING = null; line('sysline', '⏳ your last run keeps working in the background — watch it in 🏠 Den'); }
+      $('box').value = ''; sending = true;
+      line('bubble you', esc(task));
+      try {
+        if (creatureId === 'pair') return runPairLaunch(task);
+        if (creatureId === 'team') return runTeam(task);
+        if (creatureId === 'besttrio') { const trio = bestTrio(); line('sysline', `🏆 Trophy trio: ${trio.map((id) => REG[id].emoji + ' ' + REG[id].name).join(' · ')}`); return runTeam(task, trio); }
+        if (creatureId === 'main') {
+          if (OWNED.length >= 2 && looksBig(task)) { askSoloOrTeam(task); sending = false; return; }   // the Main asks
+          return runSolo(MAIN, task);
+        }
+        if (creatureId === 'keeper') {
+          const rec = await (await fetch('/api/crew/recommend?task=' + encodeURIComponent(task))).json();
+          const top = (rec.ranked || [])[0]; creatureId = top ? top.id : OWNED[0];
+          if (top) { applyKit(top.id); line('sysline', `🧭 Keeper picks <b>${top.emoji} ${esc(top.name)}</b> — ${esc(top.specialty || top.role)}`); }
+        }
+        return runSolo(creatureId, task);
+      } catch { failLine('couldn’t reach the server'); }
+    }
+    async function runPairLaunch(task) {
+      status('working', 'a pair');
+      try { const d = await post('/api/agent/pair', { cwd: FOLDER, mode: MODE, task, browser: BROWSER }); if (d.error) return failLine('⚠ ' + d.error); attachStream(d.id, null); }
+      catch { return failLine('couldn’t reach the server'); }
+      sending = false;
+    }
+
+    // deep-link from the Den: ?view=<sessionId> → attach to an already-running session
+    async function viewSession(id) {
+      let c = null;
+      try { c = ((await (await fetch('/api/crew')).json()).crew || []).find((x) => x.id === id); } catch {}
+      stream.innerHTML = ''; curBubble = null; curCreatureId = null;
+      if (c) { $('box').placeholder = `watching ${c.emoji} ${c.name}…`; status('working', c.name); }
+      attachStream(id, c && c.kind !== 'pair' ? (REG[c.creatureId] || {}) : null);
+    }
+
+    $('who').addEventListener('change', () => {
+      const v = $('who').value;
+      if (v === 'main') { applyKit(MAIN); $('kithint').textContent = '👑 your main dude — rallies the crew if it\'s a big one'; }
+      else if (v === 'keeper') $('kithint').textContent = '🧭 tell me the task — I\'ll pick + equip the right specialist';
+      else if (v === 'pair') $('kithint').textContent = '🤝 a planner + a doer, matched to the job';
+      else if (v === 'team') $('kithint').textContent = '🎪 your Main huddles the crew + splits the work by specialty';
+      else if (v === 'besttrio') $('kithint').textContent = '🏆 the strongest specialist from each biome — full synergy';
+      else applyKit(v);
+      if (turnBusy) return;
+      stream.innerHTML = ''; curBubble = null; curCreatureId = null; if (es) { es.close(); es = null; } status('ready');
+    });
+    $('send').addEventListener('click', send);
+    $('box').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+    window.addEventListener('cb-a', (e) => { e.preventDefault(); send(); });
+
+    // tap-to-talk → captures the system mic, transcribes on-device (see /voice.js)
+    if (window.CMVoice) CMVoice.attach($('mic'), $('box'), (m) => line('sysline', esc(m)));
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudédex</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    :root{ --bg:#fff6ec; --ink:#3a2617; --dim:#b07d4e; --accent:#f5793b; --line:#f4d3ac; --edge:#c25e2a; --bad:#d24a3a; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+    nav{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin:6px 0 4px; }
+    nav a{ font-weight:700; font-size:9px; text-decoration:none; color:var(--dim); background:#fff; padding:4px 5px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    nav a.on{ background:var(--accent); color:#fff; }
+    #app{ width:100%; margin:0; padding:4px 10px 6px; }
+
+    #pager{ display:flex; align-items:center; justify-content:center; gap:12px; margin:2px 0 6px; }
+    #pager button{ font-family:var(--font-body); font-weight:700; font-size:14px; cursor:pointer; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); width:34px; height:30px; }
+    #pager button:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #counter{ font-family:var(--font-title); font-size:10px; color:var(--edge); min-width:66px; text-align:center; }
+
+    .card{ background:#fff; border:3px solid var(--edge); padding:9px 10px; }
+    .card.enemy{ background:#fff2ec; border-color:var(--bad); }
+    .chead{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .portrait{ width:66px; height:66px; flex-shrink:0; background:#fff2e2; border:3px solid var(--line); display:flex; align-items:center; justify-content:center; }
+    .enemy .portrait{ background:#ffe9e2; border-color:#e6b3a8; }
+    .portrait canvas{ image-rendering:pixelated; width:58px; height:58px; }
+    .chead .who{ min-width:0; }
+    .nm{ font-weight:700; font-size:14px; display:block; }
+    .rar{ font-size:9px; font-weight:700; letter-spacing:1px; }
+    .fac{ font-size:9px; color:var(--dim); display:block; margin-top:2px; letter-spacing:1px; }
+    .bio{ font-size:10px; color:#5a4530; line-height:1.4; margin:5px 0; }
+    .quirk{ font-size:10px; color:var(--edge); margin-bottom:6px; line-height:1.35; }
+    .enemy .quirk{ color:#c56a3a; }
+    .stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin-bottom:6px; }
+    .st{ text-align:center; font-size:9px; color:var(--dim); }
+    .st b{ display:block; font-size:12px; color:var(--ink); }
+    .st .bar{ height:5px; background:var(--line); margin-top:2px; overflow:hidden; }
+    .st .bar i{ display:block; height:100%; background:var(--accent); }
+    .enemy .st .bar i{ background:var(--bad); }
+    .sw{ font-size:9.5px; color:#6a4f36; line-height:1.4; }
+    .spec{ font-size:10px; font-weight:700; color:var(--edge); background:#fff3e6; border:2px solid var(--edge); padding:4px 7px; margin-bottom:6px; }
+    .spec span{ color:var(--dim); font-weight:400; }
+    .own{ font-size:10px; color:#2a9d5a; font-weight:700; margin-top:4px; }
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+</head>
+<body>
+  <div id="app">
+    <nav><a href="/">🦀 Tank</a><a href="/den.html">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html" class="on">📖 Dex</a></nav>
+    <div id="pager"><button id="prev">◀</button><span id="counter">— / —</span><button id="next">▶</button></div>
+    <div id="card"></div>
+  </div>
+
+  <script src="/fx.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const BIOME = { aquatic: '🌊 OCEAN', vivarium: '🌿 FOREST', desert: '🏜️ DESERT' };
+    let entries = [], RARITY = {}, owned = new Set(), i = 0, port = null;
+
+    (async () => {
+      const [spd, state] = await Promise.all([
+        (await fetch('/api/species')).json(),
+        (await fetch('/api/state')).json(),
+      ]);
+      RARITY = spd.rarity || {};
+      owned = new Set([state.starter, ...(state.roster || [])]);
+      const allies = ['aquatic', 'vivarium', 'desert'].flatMap(b => spd.species.filter(s => s.faction === 'friendly' && s.biome === b));
+      const enemies = spd.species.filter(s => s.faction === 'hostile');
+      entries = [...allies, ...enemies];
+      render();
+    })();
+
+    $('prev').addEventListener('click', () => { i = (i - 1 + entries.length) % entries.length; render(); });
+    $('next').addEventListener('click', () => { i = (i + 1) % entries.length; render(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') $('prev').click(); if (e.key === 'ArrowRight') $('next').click(); });
+    // physical d-pad: left/right flips entries
+    window.addEventListener('cb-nav', (e) => {
+      if (e.detail === 'left') { e.preventDefault(); $('prev').click(); }
+      else if (e.detail === 'right') { e.preventDefault(); $('next').click(); }
+    });
+
+    function render() {
+      if (!entries.length) return;
+      const sp = entries[i], enemy = sp.faction === 'hostile';
+      $('counter').textContent = (i + 1) + ' / ' + entries.length;
+      const rc = (RARITY[sp.rarity] || {}).color || '#9aa7c7';
+      const stats = ['vigor', 'wit', 'speed', 'charm', 'focus'].map(k =>
+        `<div class="st">${k.slice(0, 3)}<b>${sp.stats[k]}</b><div class="bar"><i style="width:${sp.stats[k] * 10}%"></i></div></div>`).join('');
+      const card = $('card');
+      card.className = 'card' + (enemy ? ' enemy' : '');
+      card.innerHTML =
+        `<div class="chead">` +
+          `<div class="portrait"><canvas width="${sp.sprite ? sp.sprite.frameW : 48}" height="${sp.sprite ? sp.sprite.frameH : 48}"></canvas></div>` +
+          `<div class="who"><span class="nm">${sp.emoji} ${sp.name}</span>` +
+          `<span class="rar" style="color:${rc}">${sp.rarity}</span>` +
+          `<span class="fac">${enemy ? '☠️ WILD · HOSTILE' : (BIOME[sp.biome] || '')}</span></div></div>` +
+        (sp.kit ? `<div class="spec">🎯 ${sp.kit.specialty} <span>— go-to for ${sp.kit.goto}</span></div>` : '') +
+        `<div class="bio">${sp.bio}</div>` +
+        `<div class="quirk">🧬 ${sp.quirk}</div>` +
+        `<div class="stats">${stats}</div>` +
+        `<div class="sw">💪 ${sp.strengths} · 😅 ${sp.weaknesses}</div>` +
+        (owned.has(sp.id) ? '<div class="own">✓ part of your family</div>' : '');
+
+      // (re)start the single portrait animation for this entry
+      port = null;
+      if (sp.sprite) {
+        const cv = card.querySelector('canvas');
+        const p = { cx: cv.getContext('2d'), img: new Image(), fw: sp.sprite.frameW, n: sp.sprite.frames || 1, fps: sp.sprite.fps || 8, fx: sp.sprite.fx, cur: 0, last: null, ok: false };
+        p.cx.imageSmoothingEnabled = false;
+        p.img.onload = () => p.ok = true;
+        p.img.src = '/assets/' + sp.sprite.sheet + '?v=1';
+        port = p;
+      }
+    }
+
+    (function loop(now) {
+      const p = port;
+      if (p && p.ok) {
+        if (p.last == null) p.last = now;
+        if (now - p.last >= 1000 / (p.fps || 8)) { p.cur = (p.cur + 1) % p.n; p.last = now; }
+        p.cx.clearRect(0, 0, p.fw, p.fw);
+        p.cx.drawImage(p.img, p.cur * p.fw, 0, p.fw, p.fw, 0, 0, p.fw, p.fw);
+        if (p.fx && window.drawLightningFx) window.drawLightningFx(p.cx, p.fx.spots, 0, 0, 1);
+      }
+      requestAnimationFrame(loop);
+    })(performance.now());
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "vivarium": {
+    "default": "original",
+    "variants": {
+      "original": { "file": "tank_viv.png",          "src": "web/assets/_interiors/vivarium.png", "crop": 14 },
+      "mossden":  { "file": "tank_viv_mossden.png",   "src": "web/assets/_viv_opts/o5_mossden.png", "crop": 3 },
+      "mushroom": { "file": "tank_viv_mushroom.png",  "src": "web/assets/_viv_opts/o6_mushroom.png", "crop": 3 }
+    }
+  },
+  "desert": {
+    "default": "original",
+    "variants": {
+      "original": { "file": "tank_desert.png",        "src": "web/assets/_interiors/desert.png",     "crop": 2 },
+      "sunset":   { "file": "tank_desert_sunset.png",  "src": "web/assets/_desert_opts/o6_sunset.png", "crop": 3 }
+    }
+  },
+  "aquatic": {
+    "default": "original",
+    "variants": {
+      "original": { "file": "tank_aqua_a.png",      "src": "web/assets/_interiors/aquatic.png", "crop": 2 },
+      "deep":     { "file": "tank_aqua_deep.png",    "src": "web/assets/_aqua_opts/o4_deep.png", "crop": 3 }
+    }
+  }
+}

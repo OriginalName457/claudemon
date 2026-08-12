@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%A6%80%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <link rel="stylesheet" href="/style.css?v=20" />
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+  <script src="/editor.js?v=7" defer></script>
+  <style>
+    #playgame{ display:block; max-width:512px; margin:12px auto 0; padding:13px 12px; text-align:center; text-decoration:none; font-family:inherit; font-weight:800; letter-spacing:1px; font-size:18px; color:#1a1206; background:linear-gradient(90deg,#ffd23f,#f5793b); border:3px solid #c25e2a; border-radius:14px; box-shadow:0 4px 0 #a8501f; transition:transform .08s,filter .1s; }
+    #playgame:hover{ filter:brightness(1.06); }
+    #playgame:active{ transform:translateY(3px); box-shadow:0 1px 0 #a8501f; }
+    #playgame span{ display:block; margin-top:4px; font-size:11px; font-weight:600; letter-spacing:0; opacity:.85; line-height:1.5; }
+    #playgame b{ color:#7a2d0a; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>CLAUDEMON</h1>
+      <span id="subtitle">a little pixel pal for Claude Code</span>
+      <nav id="nav"><a href="/" class="on">🦀 Tank</a><a href="/den.html">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+    </header>
+
+    <div id="tank-wrap">
+      <canvas id="tank" width="512" height="480"></canvas>
+      <div id="speech" class="hidden"></div>
+      <div id="controls"><!-- feed/water/pet/play/rest removed until the care & provisions system ships; kept as an empty anchor so device layout stays intact --></div>
+    </div>
+
+    <!-- Enter the game -->
+    <a href="/clawland.html" id="playgame">⚔️&nbsp; ENTER CLAWLAND &nbsp;⚔️<span>take your Claudemon into the wild. eat your way to the top.<br><b>multiplayer coming soon</b></span></a>
+
+    <!-- HUD is tucked away — pops up over the screen via the A button -->
+    <div id="hud">
+      <div class="hud-title">▤ STATS <span class="hud-x">✕</span></div>
+      <div id="nameplate">
+        <span id="emoji">🦀</span>
+        <span id="petname">Clawde</span>
+        <span id="mood" class="tag">—</span>
+      </div>
+      <div id="statuses"></div>
+      <div id="stats">
+        <div class="stat"><label>🍖 fullness</label><div class="track"><div class="fill" id="bar-fullness"></div></div></div>
+        <div class="stat"><label>💧 hydration</label><div class="track"><div class="fill" id="bar-hydration"></div></div></div>
+        <div class="stat"><label>⚡ energy</label><div class="track"><div class="fill" id="bar-energy"></div></div></div>
+        <div class="stat"><label>❤️ happiness</label><div class="track"><div class="fill" id="bar-happiness"></div></div></div>
+      </div>
+      <div id="meta">
+        <span>bond <b id="bond">—</b></span>
+        <span>💰 <b id="pts">—</b> pts</span>
+        <span>comfort <b id="comfort">0%</b></span>
+      </div>
+      <footer id="log"></footer>
+    </div>
+  </div>
+  <script src="/fx.js"></script>
+  <script src="/tank.js?v=28"></script>
+</body>
+</html>

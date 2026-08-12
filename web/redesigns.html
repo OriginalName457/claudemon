@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Redesigns — pick your favorites</title>
+<style>
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:#eaf0ff;
+    font-family:"Courier New",monospace;min-height:100vh;padding:22px 16px 40px;text-align:center;}
+  h1{letter-spacing:3px;color:#3ac0a0;font-size:22px;margin:4px;}
+  .sub{color:#8fa0cf;font-size:12px;margin-bottom:22px;}
+  .rowlabel{max-width:900px;margin:20px auto 8px;text-align:left;font-size:14px;letter-spacing:2px;color:#eaf0ff;border-bottom:1px solid #26305a;padding-bottom:4px;}
+  .row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;}
+  .card{background:#131a36;border:2px solid #26305a;border-bottom-width:5px;border-radius:14px;padding:14px;width:210px;}
+  .card.cur{opacity:.7;border-style:dashed;}
+  .card.pick{border-color:#3ac0a0;}
+  .card h2{font-size:14px;margin:0 0 8px;}
+  .stage{background:#08122b;border:2px solid #1d2748;border-radius:10px;height:170px;display:flex;align-items:center;justify-content:center;}
+  .stage img{width:130px;height:130px;image-rendering:pixelated;animation:bob 1.7s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .note{font-size:11px;color:#8fa0cf;margin-top:9px;line-height:1.4;}
+  .tag{font-size:10px;color:#3ac0a0;}
+</style></head>
+<body>
+  <h1>REDESIGNS — YOUR CALL</h1>
+  <div class="sub">nothing is implemented yet · pick a favorite in each row (or say tweak)</div>
+
+  <div class="rowlabel">🦎 FERNLING — new cute lizard, orange &amp; black</div>
+  <div class="row">
+    <div class="card cur"><h2>Current (replace)</h2><div class="stage"><img src="/assets/fernling.png?v=1"></div><div class="note">green, frond on head — the one you don't want</div></div>
+    <div class="card pick"><h2>A · Striped lizard</h2><div class="stage"><img src="/assets/_concepts/fernling_a.png?v=1"></div><div class="note">orange + black stripes, long tail, gecko shape</div></div>
+    <div class="card pick"><h2>B · Round gecko</h2><div class="stage"><img src="/assets/_concepts/fernling_b.png?v=1"></div><div class="note">chunky rounded orange dino, big eyes, cozy</div></div>
+  </div>
+
+  <div class="rowlabel">✨ GLOWBUG — full redesign</div>
+  <div class="row">
+    <div class="card pick"><h2>A · Lantern bug</h2><div class="stage"><img src="/assets/_concepts/glowbug_a.png?v=1"></div><div class="note">glowing golden belly, lightning bolt, tiny wings</div></div>
+    <div class="card pick"><h2>B · Fuzzy moth</h2><div class="stage"><img src="/assets/_concepts/glowbug_b.png?v=1"></div><div class="note">soft teal moth, big antennae, blushy + dreamy</div></div>
+  </div>
+
+  <div class="rowlabel">🐙 INKWELL — recolor green → orange</div>
+  <div class="row">
+    <div class="card cur"><h2>Current (green)</h2><div class="stage"><img src="/assets/octo.png?v=1"></div><div class="note">the current teal/green octopus</div></div>
+    <div class="card pick"><h2>Orange recolor</h2><div class="stage"><img src="/assets/_concepts/inkwell_orange.png?v=1"></div><div class="note">same friendly octo, warm orange + cream spots</div></div>
+  </div>
+</body></html>

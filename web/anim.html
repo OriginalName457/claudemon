@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Clawde — Animation</title>
+<style>
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:#eaf0ff;
+    font-family:"Courier New",monospace;min-height:100vh;padding:26px 16px;text-align:center;}
+  h1{letter-spacing:4px;color:#3ac0a0;font-size:24px;margin:4px;}
+  .sub{color:#8fa0cf;font-size:13px;margin-bottom:22px;}
+  .big{background:#08122b;border:2px solid #1d2748;border-radius:14px;display:inline-flex;align-items:flex-end;justify-content:center;
+    width:300px;height:300px;position:relative;overflow:hidden;}
+  .big .floor{position:absolute;bottom:0;left:0;right:0;height:16px;background:#241b3a;}
+  #big{image-rendering:pixelated;position:relative;z-index:2;animation:stroll 6s ease-in-out infinite;}
+  @keyframes stroll{0%{transform:translateX(-60px) scaleX(1)}46%{transform:translateX(60px) scaleX(1)}
+    50%{transform:translateX(60px) scaleX(-1)}96%{transform:translateX(-60px) scaleX(-1)}100%{transform:translateX(-60px) scaleX(1)}}
+  h2{font-size:13px;color:#8fa0cf;margin:26px 0 10px;letter-spacing:2px;}
+  .strip{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  .strip .cell{background:#0e1430;border:1px solid #26305a;border-radius:8px;padding:6px;}
+  .strip canvas{image-rendering:pixelated;display:block;}
+  .cap{font-size:10px;color:#5f6b96;margin-top:3px;}
+</style></head>
+<body>
+  <h1>🦀 CLAWDE — IDLE ANIMATION</h1>
+  <div class="sub">clean transparent frames · no background</div>
+  <div class="big"><div class="floor"></div><canvas id="big" width="48" height="48" style="width:200px;height:200px;"></canvas></div>
+  <h2>ALL 9 FRAMES</h2>
+  <div class="strip" id="strip"></div>
+
+<script>
+(async()=>{
+  const man=await (await fetch('/assets/manifest.json?v='+Date.now())).json();
+  const st=man.creature.states.idle;
+  const img=new Image(); img.src='/assets/'+st.sheet+'?v='+Date.now();
+  await new Promise(r=>img.onload=r);
+  const fw=st.frameW,fh=st.frameH,n=st.frames,fps=st.fps||8;
+  // big animated
+  const bg=document.getElementById('big').getContext('2d'); bg.imageSmoothingEnabled=false;
+  let cur=0; setInterval(()=>{bg.clearRect(0,0,fw,fh);bg.drawImage(img,(cur%n)*fw,0,fw,fh,0,0,fw,fh);cur++;},1000/fps);
+  // frame strip
+  const strip=document.getElementById('strip');
+  for(let i=0;i<n;i++){
+    const cell=document.createElement('div'); cell.className='cell';
+    const cv=document.createElement('canvas'); cv.width=fw*2; cv.height=fh*2;
+    const cx=cv.getContext('2d'); cx.imageSmoothingEnabled=false; cx.drawImage(img,i*fw,0,fw,fh,0,0,fw*2,fh*2);
+    const cap=document.createElement('div'); cap.className='cap'; cap.textContent='f'+i;
+    cell.appendChild(cv); cell.appendChild(cap); strip.appendChild(cell);
+  }
+})();
+</script>
+</body></html>

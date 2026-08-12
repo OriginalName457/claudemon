@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon — Projects</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    :root{ --bg:#fff6ec; --panel:#fff; --ink:#3a2617; --dim:#b07d4e; --accent:#f5793b; --line:#f4d3ac; --edge:#c25e2a; --good:#2a9d5a; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+    nav{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin:6px 0 4px; }
+    nav a{ font-weight:700; font-size:9px; text-decoration:none; color:var(--dim); background:#fff; padding:4px 5px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    nav a.on{ background:var(--accent); color:#fff; }
+    .subtabs{ display:flex; gap:6px; justify-content:center; margin:2px 0 7px; }
+    .subtabs a{ font-weight:700; font-size:10px; text-decoration:none; color:var(--dim); background:#fff; padding:6px 12px; border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    .subtabs a.on{ background:var(--accent); color:#fff; }
+    #app{ display:flex; flex-direction:column; height:100%; padding:4px 10px 8px; min-height:0; }
+
+    #bar{ display:flex; justify-content:flex-end; margin-bottom:5px; }
+    #addbtn{ font-family:var(--font-body); font-weight:700; font-size:9px; cursor:pointer; background:#fff; color:var(--edge); border:2px solid var(--edge); box-shadow:1px 1px 0 var(--edge); padding:4px 8px; }
+    #addbtn:active{ transform:translate(1px,1px); box-shadow:0 0 0; }
+
+    #list{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding:2px; min-height:0; }
+    .sec{ font-family:var(--font-title); font-size:9px; color:var(--edge); margin:6px 2px 1px; }
+    .sec.arch{ color:var(--dim); margin-top:12px; }
+    .proj{ background:var(--panel); border:3px solid var(--edge); padding:8px 10px; }
+    .proj.archived{ opacity:.72; border-color:var(--line); box-shadow:none; }
+    .prow{ display:flex; align-items:center; gap:8px; }
+    .pname{ font-weight:700; font-size:13px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .badge{ flex:0 0 auto; font-family:var(--font-body); font-weight:700; font-size:8px; color:#fff; background:var(--accent); padding:2px 6px; }
+    .badge .d{ display:inline-block; width:6px; height:6px; border-radius:50%; background:#fff; margin-right:3px; animation:pulse 1s ease-in-out infinite; }
+    @keyframes pulse{ 50%{ opacity:.35; } }
+    .ppath{ font-family:var(--font-body); font-weight:700; font-size:8.5px; color:var(--dim); margin-top:3px; word-break:break-all; }
+    .ptask{ font-size:11px; color:#5a4636; margin-top:4px; line-height:1.35; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+    .pmeta{ font-family:var(--font-body); font-weight:700; font-size:8.5px; color:var(--dim); margin-top:4px; }
+    .pacts{ display:flex; gap:5px; margin-top:7px; }
+    .pacts button{ font-family:var(--font-body); font-weight:700; font-size:9.5px; cursor:pointer; padding:5px 8px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); background:#fff; color:var(--edge); }
+    .pacts button:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    .pacts .go{ background:var(--accent); color:#fff; }
+    .missing{ color:#d24a3a; }
+    .empty{ text-align:center; color:var(--dim); font-size:11px; padding:26px 12px; line-height:1.7; }
+    /* per-project history */
+    .hwrap{ margin-top:6px; border-top:1px dashed var(--line); padding-top:4px; }
+    .hwrap.hidden{ display:none; }
+    .hentry{ display:flex; align-items:baseline; gap:6px; font-size:10px; padding:3px 0; }
+    .hentry .hk{ flex:0 0 auto; color:var(--dim); font-family:var(--font-body); font-weight:700; font-size:8px; }
+    .hentry .ht{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#5a4636; }
+    .hentry .hw{ flex:0 0 auto; color:var(--dim); font-size:8.5px; }
+    .hentry .hview{ flex:0 0 auto; font-family:var(--font-body); font-weight:700; font-size:8.5px; cursor:pointer; background:#fff; border:1px solid var(--edge); color:var(--edge); padding:1px 5px; }
+    .histbtn{ background:#fff8ef!important; }
+    /* transcript modal */
+    #tmodal{ position:absolute; inset:0; background:rgba(58,38,23,.55); display:flex; align-items:center; justify-content:center; z-index:40; padding:12px; }
+    #tmodal.hidden{ display:none; }
+    .tm{ width:100%; max-width:460px; max-height:92%; background:var(--panel); border:3px solid var(--edge); box-shadow:4px 4px 0 var(--edge); display:flex; flex-direction:column; }
+    .tmhead{ font-family:var(--font-title); font-size:9px; color:var(--edge); padding:9px 10px; border-bottom:2px solid var(--line); display:flex; align-items:center; }
+    .tmhead button{ margin-left:auto; font-family:var(--font-body); font-weight:700; font-size:11px; cursor:pointer; background:#fff; border:2px solid var(--edge); box-shadow:1px 1px 0 var(--edge); color:var(--edge); padding:2px 8px; }
+    #tbody{ flex:1; overflow:auto; margin:0; padding:9px 11px; font-family:ui-monospace,Consolas,monospace; font-size:11px; line-height:1.5; white-space:pre-wrap; word-break:break-word; color:var(--ink); }
+    #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:#fff; color:var(--accent); border:3px solid var(--accent); box-shadow:3px 3px 0 var(--edge); padding:9px 14px; font-size:12px; display:none; z-index:50; font-weight:700; }
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+</head>
+<body>
+  <div id="app">
+    <nav><a href="/">🦀 Tank</a><a href="/den.html" class="on">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+    <div class="subtabs"><a href="/den.html">🏠 Tanks</a><a href="/crew.html">🤖 Crew</a><a href="/workshop.html" class="on">📋 Projects</a></div>
+    <div id="bar"><button id="addbtn">＋ add a folder</button></div>
+    <div id="list"><div class="empty">loading…</div></div>
+    <div id="tmodal" class="hidden">
+      <div class="tm">
+        <div class="tmhead">📜 SESSION TRANSCRIPT <button id="tclose">✕</button></div>
+        <pre id="tbody"></pre>
+      </div>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let TOKEN = null;
+    function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2200); }
+    const esc = (s) => String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    function ago(ms) { const s = Math.max(0, (Date.now() - ms) / 1000); if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago'; return Math.floor(s / 86400) + 'd ago'; }
+    async function token() { if (!TOKEN) TOKEN = (await (await fetch('/api/lab/token')).json()).token; return TOKEN; }
+    async function post(url, body) { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': await token() }, body: JSON.stringify(body) }); return r.json(); }
+    const KIND = { team: '🎪 team', pair: '🤝 pair', solo: '🤖 solo' };
+
+    function card(p, workingSet) {
+      const working = workingSet.has(p.path);
+      const acts = p.status === 'archived'
+        ? `<button data-restore="${esc(p.path)}">♻ restore</button><button data-forget="${esc(p.path)}">🗑</button>`
+        : `<button class="go" data-continue="${esc(p.path)}">▶ open in crew</button><button data-archive="${esc(p.path)}">🗄 archive</button>`;
+      const hist = (p.history || []).slice().reverse();
+      const histBtn = hist.length ? `<button class="histbtn" data-hist>📜 history (${hist.length})</button>` : '';
+      const histRows = hist.map((h) =>
+        `<div class="hentry"><span class="hk">${KIND[h.kind] || '·'}</span><span class="ht">${esc((h.task || '(started work)')).slice(0, 70)}</span><span class="hw">${ago(h.at)}</span>${h.sessionId ? `<button class="hview" data-log="${esc(h.sessionId)}">view</button>` : ''}</div>`).join('');
+      return `<div class="proj ${p.status === 'archived' ? 'archived' : ''}">` +
+        `<div class="prow"><span class="pname">📁 ${esc(p.name)}</span>${working ? '<span class="badge"><span class="d"></span>WORKING</span>' : ''}</div>` +
+        `<div class="ppath ${p.exists ? '' : 'missing'}">${p.exists ? esc(p.path) : '⚠ folder no longer exists — ' + esc(p.path)}</div>` +
+        (p.lastTask ? `<div class="ptask">“${esc(p.lastTask)}”</div>` : '') +
+        `<div class="pmeta">${KIND[p.lastKind] || ''} · ${p.files} file${p.files === 1 ? '' : 's'} · ${ago(p.lastAt)}</div>` +
+        (hist.length ? `<div class="hwrap hidden">${histRows}</div>` : '') +
+        `<div class="pacts">${histBtn}${acts}</div></div>`;
+    }
+    async function viewLog(id) {
+      $('tbody').textContent = 'loading…'; $('tmodal').classList.remove('hidden');
+      try { const d = await (await fetch('/api/log?id=' + encodeURIComponent(id))).json(); $('tbody').textContent = (d.text || '').trim() || 'no transcript saved for this run.'; }
+      catch { $('tbody').textContent = 'could not load the transcript.'; }
+      $('tbody').scrollTop = 0;
+    }
+
+    async function load() {
+      let projs = [], crew = [];
+      try { projs = (await (await fetch('/api/projects')).json()).projects || []; } catch { $('list').innerHTML = '<div class="empty">projects offline…</div>'; return; }
+      try { crew = (await (await fetch('/api/crew')).json()).crew || []; } catch {}
+      const working = new Set(crew.filter((c) => c.status === 'working' || c.status === 'waiting').map((c) => c.cwd));
+      if (!projs.length) { $('list').innerHTML = '<div class="empty">no projects yet 📋<br>point your crew at a folder in the Crew tab and it shows up here — active work up top, finished ones you can archive.</div>'; return; }
+      const active = projs.filter((p) => p.status !== 'archived');
+      const arch = projs.filter((p) => p.status === 'archived');
+      let html = '';
+      if (active.length) html += `<div class="sec">⚡ ACTIVE (${active.length})</div>` + active.map((p) => card(p, working)).join('');
+      if (arch.length) html += `<div class="sec arch">🗄 ARCHIVED (${arch.length})</div>` + arch.map((p) => card(p, working)).join('');
+      $('list').innerHTML = html;
+      $('list').querySelectorAll('[data-continue]').forEach((b) => b.addEventListener('click', () => { location.href = 'crew.html?cwd=' + encodeURIComponent(b.dataset.continue); }));
+      $('list').querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', async () => { await post('/api/projects/status', { path: b.dataset.archive, status: 'archived' }); toast('🗄 archived'); load(); }));
+      $('list').querySelectorAll('[data-restore]').forEach((b) => b.addEventListener('click', async () => { await post('/api/projects/status', { path: b.dataset.restore, status: 'active' }); toast('♻ restored'); load(); }));
+      $('list').querySelectorAll('[data-hist]').forEach((b) => b.addEventListener('click', () => { const w = b.closest('.proj').querySelector('.hwrap'); if (w) w.classList.toggle('hidden'); }));
+      $('list').querySelectorAll('[data-log]').forEach((b) => b.addEventListener('click', () => viewLog(b.dataset.log)));
+      $('list').querySelectorAll('[data-forget]').forEach((b) => b.addEventListener('click', async () => { if (!confirm('Remove this project from the list? (your folder is NOT deleted)')) return; await post('/api/projects/forget', { path: b.dataset.forget }); toast('🗑 removed'); load(); }));
+    }
+
+    $('addbtn').addEventListener('click', async () => {
+      const p = prompt('Paste the full path to a project folder to track:');
+      if (!p || !p.trim()) return;
+      const r = await post('/api/projects/add', { path: p.trim() });
+      if (r.error) toast('⚠ ' + r.error); else { toast('📁 added'); load(); }
+    });
+
+    $('tclose').addEventListener('click', () => $('tmodal').classList.add('hidden'));
+
+    load();
+    setInterval(load, 5000);   // keep the "working now" badges fresh
+  </script>
+</body>
+</html>

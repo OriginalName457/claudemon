@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claudemon — pick a device</title>
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    :root{ --cream:#fbf3e8; --cream2:#fff9f0; --edge:#c25e2a; --edge2:#a34a18; --orange:#f5793b; --ink:#3a2617; --dark:#2a2320; --led:#ff5a4a; --gold:#e6b34a; --shadow:#e9ccab; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:#fff6ec; color:var(--ink); min-height:100vh; text-align:center; padding:18px 14px 46px; }
+    h1{ font-family:var(--font-title); font-size:20px; color:var(--orange); text-shadow:3px 3px 0 #ffcf9f; margin:6px 0; line-height:1.4; }
+    .sub{ color:#b07d4e; font-size:12px; max-width:640px; margin:6px auto 22px; line-height:1.6; }
+    .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:26px; max-width:900px; margin:0 auto; justify-items:center; }
+    .label{ font-family:var(--font-title); font-size:10px; color:var(--edge); margin-top:12px; line-height:1.5; }
+    .note{ font-size:10px; color:#b07d4e; margin-top:3px; }
+    .q{ max-width:640px; margin:26px auto 0; background:#fff; border:3px solid var(--edge); padding:14px; font-size:12.5px; color:var(--ink); line-height:1.7; }
+
+    /* ---- base device ---- */
+    .device{ position:relative; width:220px; background:var(--cream); border:5px solid var(--edge); padding:16px 16px 20px; box-shadow:6px 6px 0 var(--shadow); }
+    .device .screen{ position:relative; border:5px solid var(--dark); background:#0a1020; overflow:hidden; aspect-ratio:1/1.05; }
+    .device .screen img{ width:100%; height:100%; object-fit:cover; image-rendering:pixelated; display:block; }
+    .device .brand{ font-family:var(--font-title); font-size:9px; color:var(--edge); letter-spacing:1px; margin:8px 0 6px; }
+    .device .controls{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:12px; min-height:34px; }
+    .btn{ width:22px; height:22px; border-radius:50%; background:var(--orange); border:3px solid var(--edge); }
+    .btn.sm{ width:15px; height:15px; }
+    .pill{ width:40px; height:15px; border-radius:9px; background:var(--orange); border:3px solid var(--edge); }
+    .dpad{ position:relative; width:34px; height:34px; }
+    .dpad::before,.dpad::after{ content:''; position:absolute; background:var(--ink); }
+    .dpad::before{ left:11px; top:0; width:12px; height:34px; }
+    .dpad::after{ left:0; top:11px; width:34px; height:12px; }
+    .screw{ position:absolute; width:9px; height:9px; border-radius:50%; background:#fff; border:2px solid var(--edge2); }
+    .led{ position:absolute; width:9px; height:9px; border-radius:50%; background:var(--led); border:2px solid #7a1f18; box-shadow:0 0 6px var(--led); }
+    .speaker{ display:flex; gap:3px; }
+    .speaker i{ width:3px; height:16px; background:var(--edge); display:block; }
+    .plate{ font-family:var(--font-title); font-size:7px; color:#fff; background:var(--edge); padding:2px 6px; }
+
+    /* 1 · Tamagotchi — egg */
+    .tama{ border-radius:60px 60px 50px 50px; padding-top:26px; }
+    .tama .loop{ position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:20px; height:20px; border:5px solid var(--edge); border-radius:50%; background:var(--cream); }
+    .tama .screen{ border-radius:10px; }
+    .tama .controls .btn{ width:17px; height:17px; }
+
+    /* 2 · DIY Raspberry Pi */
+    .pi{ border-radius:8px; }
+    .pi .screw.tl{ top:6px; left:6px; } .pi .screw.tr{ top:6px; right:6px; } .pi .screw.bl{ bottom:6px; left:6px; } .pi .screw.br{ bottom:6px; right:6px; }
+    .pi .led{ top:10px; right:20px; }
+    .pi .controls{ justify-content:space-between; padding:0 8px; }
+    .pi .plate{ position:absolute; top:8px; left:16px; }
+
+    /* 3 · Game Boy */
+    .gameboy{ border-radius:8px 8px 30px 8px; }
+    .gameboy .screen{ border-width:8px; border-color:#4a5a4a; }
+    .gameboy .controls{ justify-content:space-between; padding:0 6px; }
+    .gameboy .abtns{ display:flex; gap:8px; transform:rotate(-18deg); }
+
+    /* 4 · Pi HAT board */
+    .pihat{ border-radius:4px; background:var(--cream2); padding-right:30px; }
+    .pihat .gpio{ position:absolute; top:8px; right:8px; bottom:8px; width:14px; display:flex; flex-direction:column; gap:4px; }
+    .pihat .gpio i{ flex:1; background:var(--gold); border:1px solid #9a7420; }
+    .pihat .chips{ position:absolute; bottom:8px; left:14px; display:flex; gap:6px; }
+    .pihat .chips i{ width:16px; height:12px; background:var(--ink); }
+    .pihat .controls{ justify-content:flex-start; gap:10px; }
+
+    /* 5 · Cream & orange (wood/brass, recolored) */
+    .cream{ border-radius:14px; background:var(--cream2); }
+    .cream .corner{ position:absolute; width:20px; height:20px; border:5px solid var(--orange); }
+    .cream .corner.tl{ top:5px; left:5px; border-right:0; border-bottom:0; }
+    .cream .corner.tr{ top:5px; right:5px; border-left:0; border-bottom:0; }
+    .cream .corner.bl{ bottom:5px; left:5px; border-right:0; border-top:0; }
+    .cream .corner.br{ bottom:5px; right:5px; border-left:0; border-top:0; }
+
+    /* 6 · Modern white */
+    .modern{ border-radius:28px; background:#ffffff; border-color:var(--edge); padding:20px 18px 22px; }
+    .modern .screen{ border-radius:16px; border-width:6px; border-color:#efe3d4; }
+    .modern .led{ position:static; width:26px; height:5px; border-radius:3px; background:var(--orange); border:0; box-shadow:none; margin:0 auto 8px; }
+  </style>
+</head>
+<body>
+  <h1>🎮 PICK YOUR DEVICE</h1>
+  <div class="sub">Six chassis, all in the white &amp; orange theme, each framing the game screen. Whichever you pick becomes the real frame around the whole interface. Just tell me a number.</div>
+
+  <div class="grid">
+    <div>
+      <div class="device tama"><div class="loop"></div><div class="brand">CLAUDEMON</div><div class="screen"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="controls"><span class="btn"></span><span class="btn"></span><span class="btn"></span></div></div>
+      <div class="label">1 · TAMAGOTCHI</div><div class="note">egg shell + loop</div>
+    </div>
+    <div>
+      <div class="device pi"><span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span><span class="led"></span><span class="plate">Pi</span><div class="brand">CLAUDEMON</div><div class="screen"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="controls"><span class="btn sm"></span><span class="btn sm"></span><span class="btn sm"></span><span class="speaker"><i></i><i></i><i></i></span></div></div>
+      <div class="label">2 · DIY PI</div><div class="note">screws, LED, label</div>
+    </div>
+    <div>
+      <div class="device gameboy"><div class="brand">CLAUDEMON</div><div class="screen"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="controls"><span class="dpad"></span><span class="abtns"><span class="btn"></span><span class="btn"></span></span><span class="speaker"><i></i><i></i><i></i></span></div></div>
+      <div class="label">3 · GAME BOY</div><div class="note">d-pad + buttons</div>
+    </div>
+    <div>
+      <div class="device pihat"><div class="gpio"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="chips"><i></i><i></i></div><div class="brand">CLAUDEMON HAT</div><div class="screen"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="controls"><span class="btn sm"></span><span class="btn sm"></span><span class="btn sm"></span></div></div>
+      <div class="label">4 · PI HAT</div><div class="note">GPIO pins + chips</div>
+    </div>
+    <div>
+      <div class="device cream"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="brand">CLAUDEMON</div><div class="screen"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="controls"><span class="dpad"></span><span class="btn"></span></div></div>
+      <div class="label">5 · CREAM &amp; ORANGE</div><div class="note">bracket corners</div>
+    </div>
+    <div>
+      <div class="device modern"><span class="led"></span><div class="screen"><img src="/assets/_bg/tank_viv.png?v=9"></div><div class="controls"><span class="pill"></span><span class="pill"></span></div></div>
+      <div class="label">6 · MODERN WHITE</div><div class="note">sleek + pill buttons</div>
+    </div>
+  </div>
+
+  <div class="q"><b>Which device (1–6)?</b> I'll wrap the whole game in that chassis — the interface renders in the screen, with the buttons/screws/LED as the physical shell around it. 🎮</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sherpa shell — pick</title>
+<style>
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:#eaf0ff;
+    font-family:"Courier New",monospace;min-height:100vh;padding:26px 16px;text-align:center;}
+  h1{letter-spacing:3px;color:#3ac0a0;font-size:22px;margin:4px;}
+  .sub{color:#8fa0cf;font-size:12px;margin-bottom:22px;}
+  .row{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;}
+  .card{background:#131a36;border:2px solid #26305a;border-bottom-width:5px;border-radius:14px;padding:16px;width:220px;}
+  .card.cur{opacity:.7;border-style:dashed;} .card.pick{border-color:#3ac0a0;}
+  .card h2{font-size:15px;margin:0 0 8px;}
+  .stage{background:#08122b;border:2px solid #1d2748;border-radius:10px;height:180px;display:flex;align-items:center;justify-content:center;}
+  .stage img{width:150px;height:150px;image-rendering:pixelated;animation:bob 1.8s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .note{font-size:11px;color:#8fa0cf;margin-top:9px;line-height:1.4;}
+</style></head>
+<body>
+  <h1>🐌 SHERPA — NEW SHELL</h1>
+  <div class="sub">white &amp; red striped shell · pick one (nothing swapped in yet)</div>
+  <div class="row">
+    <div class="card cur"><h2>Current (teal)</h2><div class="stage"><img src="/assets/snail.png?v=1"></div><div class="note">the shell we're replacing</div></div>
+    <div class="card"><h2>A · brown swirl</h2><div class="stage"><img src="/assets/_concepts/sherpa_a.png?v=1"></div><div class="note">came out brown — not white/red (miss)</div></div>
+    <div class="card pick"><h2>B · white &amp; red ✓</h2><div class="stage"><img src="/assets/_concepts/sherpa_b.png?v=1"></div><div class="note">white + red striped shell, cream body — matches your ask</div></div>
+  </div>
+  <div style="margin-top:20px;color:#8fa0cf;font-size:12px;">pick B (or say "try again" and I'll generate more white/red variants) — then I animate it, add calmer blue lightning, and swap it in 🐌⚡</div>
+</body></html>

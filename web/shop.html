@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon — Shop</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    :root{ --bg:#fff6ec; --panel:#ffffff; --ink:#3a2617; --dim:#b07d4e; --accent:#f5793b; --line:#f4d3ac; --edge:#c25e2a; --good:#2a9d5a; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+    nav{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin:6px 0 3px; }
+    nav a{ font-weight:700; font-size:9px; text-decoration:none; color:var(--dim); background:#fff; padding:4px 5px; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--edge); }
+    nav a.on{ background:var(--accent); color:#fff; }
+    #app{ width:100%; margin:0; padding:3px 9px 6px; }
+
+    /* shop tabs */
+    #tabs{ display:flex; gap:5px; margin:3px 0; }
+    #tabs .tab{ flex:1; font-family:var(--font-body); font-weight:700; font-size:10px; cursor:pointer; background:#fff; color:var(--dim); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:6px 3px; }
+    #tabs .tab.on{ background:var(--accent); color:#fff; }
+    #wallet{ text-align:center; font-size:10px; color:var(--dim); margin:2px 0 4px; }
+    #wallet b{ font-family:var(--font-title); font-size:11px; color:var(--accent); }
+
+    #pager{ display:flex; align-items:center; justify-content:center; gap:12px; margin:2px 0 6px; }
+    #pager button{ font-family:var(--font-body); font-weight:700; font-size:14px; cursor:pointer; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); width:32px; height:28px; }
+    #pager button:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    #counter{ font-family:var(--font-title); font-size:9px; color:var(--edge); min-width:70px; text-align:center; }
+
+    .buy{ font-family:var(--font-body); font-weight:700; font-size:11px; cursor:pointer; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); padding:6px 10px; }
+    .buy:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+    .buy.alt{ background:#fff; color:var(--accent); }
+    .buy:disabled{ background:#f0d8c4; color:#b79a83; cursor:default; }
+
+    /* ITEMS: 2x2 grid, 4 per screen */
+    .igrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .icell{ background:#fff; border:3px solid var(--edge); padding:8px 7px 9px; display:flex; flex-direction:column; align-items:center; gap:3px; text-align:center; }
+    .icell .ie{ font-size:30px; line-height:1; }
+    .icell .inm{ font-weight:700; font-size:11px; }
+    .icell .idesc{ font-size:9px; color:#6a4f36; line-height:1.3; flex:1; }
+    .icell .owned{ font-size:9px; color:var(--good); font-weight:700; }
+
+    /* TANKS: full-screen showcase */
+    .showtank{ text-align:center; }
+    .tankimg{ display:block; width:100%; max-height:236px; object-fit:contain; image-rendering:pixelated; background:#0d0b07; border:3px solid #0d0b07; }
+    .tkname{ font-family:var(--font-title); font-size:12px; color:var(--edge); margin-top:8px; }
+    .tkdesc{ font-size:11px; color:#6a4f36; line-height:1.45; margin:5px 6px 9px; }
+
+    /* CLAUDÉMON: full-screen animated showcase */
+    .showmon{ text-align:center; }
+    .moncv{ image-rendering:pixelated; width:150px; height:150px; display:block; margin:4px auto 2px; background:#fff2e2; border:3px solid var(--line); }
+    .mnm{ font-weight:700; font-size:16px; }
+    .mrar{ font-size:9px; font-weight:700; letter-spacing:1px; }
+    .mdesc{ font-size:11px; color:#6a4f36; line-height:1.45; margin:5px 8px; }
+    .mstats{ font-size:10px; color:var(--dim); margin-bottom:8px; }
+    .foot{ font-size:10px; color:var(--dim); margin-bottom:7px; min-height:12px; }
+    .foot.good{ color:var(--good); font-weight:700; }
+    .foot.locked{ color:#c98a2a; }
+
+    #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:24px; background:#fff; color:var(--accent); border:3px solid var(--accent); box-shadow:3px 3px 0 var(--edge); padding:9px 14px; font-size:12px; display:none; z-index:40; font-weight:700; }
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+</head>
+<body>
+  <div id="app">
+    <nav><a href="/">🦀 Tank</a><a href="/den.html">🏠 Den</a><a href="/shop.html" class="on">🛒 Shop</a><a href="/lab.html">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+    <div id="tabs">
+      <button class="tab on" data-tab="items">🧸 Items</button>
+      <button class="tab" data-tab="tanks">🏠 Tanks</button>
+      <button class="tab" data-tab="mon">🐾 Claudémon</button>
+    </div>
+    <div id="wallet">💰 <b id="pts">0</b> pts <span id="comfort"></span></div>
+    <div id="pager"><button id="prev">◀</button><span id="counter">— / —</span><button id="next">▶</button></div>
+    <div id="view"></div>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/</g, '&lt;');
+    const short = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1).trim() + '…' : s; };
+    const BIOME_IMG = { aquatic: 'tank_aqua_a.png', vivarium: 'tank_viv.png', desert: 'tank_desert.png' };
+    const BIOME_NAME = { aquatic: '🌊 Ocean', vivarium: '🌿 Forest', desert: '🏜️ Desert' };
+    const TABS = ['items', 'tanks', 'mon'];
+    let SHOP = null, REG = {}, tab = 'items', page = { items: 0, tanks: 0, mon: 0 }, TOKEN = null, port = null;
+    { const t = new URLSearchParams(location.search).get('tab'); if (TABS.includes(t)) tab = t; }
+    function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+
+    async function load() {
+      try {
+        const [shop, spd] = await Promise.all([
+          (await fetch('/api/shop')).json(),
+          (await fetch('/api/species')).json(),
+        ]);
+        SHOP = shop;
+        for (const sp of spd.species) REG[sp.id] = sp;
+        $('pts').textContent = Math.floor(shop.points || 0);
+        $('comfort').textContent = shop.comfort != null ? `· 🏠 +${shop.comfort}% comfort` : '';
+        render();
+      } catch { $('view').innerHTML = '<div style="text-align:center;color:#b07d4e;padding:30px">shop offline…</div>'; }
+    }
+
+    // ---- data per tab ----
+    function items() { return SHOP.decorations || []; }
+    function tanks() {
+      const arr = (SHOP.biomes || []).map(b => ({ kind: 'biome', b }));
+      if (SHOP.nextTank) arr.push({ kind: 'upgrade', up: SHOP.nextTank });
+      return arr;
+    }
+    function mons() { return SHOP.creatures || []; }
+
+    // ---- render ----
+    function render() {
+      port = null;
+      document.querySelectorAll('#tabs .tab').forEach(el => el.classList.toggle('on', el.dataset.tab === tab));
+      if (tab === 'items') renderItems();
+      else if (tab === 'tanks') renderTanks();
+      else renderMon();
+    }
+    function setPager(n, total, label) { $('counter').textContent = total ? `${label || ''}${n + 1} / ${total}` : '—'; }
+
+    function renderItems() {
+      const list = items(), per = 4, pages = Math.max(1, Math.ceil(list.length / per));
+      if (page.items >= pages) page.items = 0;
+      setPager(page.items, pages, 'pg ');
+      const slice = list.slice(page.items * per, page.items * per + per);
+      $('view').innerHTML = `<div class="igrid">` + slice.map(it => {
+        const btn = it.owned ? `<span class="owned">✓ owned</span>` : `<button class="buy" data-buy="${it.id}">${it.cost} pts</button>`;
+        return `<div class="icell"><span class="ie">${it.emoji}</span><span class="inm">${esc(it.name)}</span>` +
+          `<span class="idesc">${esc(short(it.blurb, 46))}</span>${btn}</div>`;
+      }).join('') + `</div>`;
+      wireBuys();
+    }
+
+    function renderTanks() {
+      const list = tanks();
+      if (page.tanks >= list.length) page.tanks = 0;
+      setPager(page.tanks, list.length);
+      const e = list[page.tanks];
+      let html = '';
+      if (e.kind === 'biome') {
+        const b = e.b, img = BIOME_IMG[b.id] || 'tank_aqua_a.png';
+        let btn, foot;
+        if (b.active) { btn = `<button class="buy" disabled>★ current home</button>`; }
+        else if (b.owned) { btn = `<button class="buy alt" data-switch="${b.id}">move in →</button>`; }
+        else { btn = `<button class="buy" data-buy="${b.id}">unlock · ${b.cost} pts</button>`; }
+        html = `<div class="showtank"><img class="tankimg" src="/assets/_bg/${img}?v=1" alt="">` +
+          `<div class="tkname">${BIOME_NAME[b.id] || b.name} Tank</div>` +
+          `<div class="tkdesc">${esc(short(b.blurb, 110))}</div>${btn}</div>`;
+      } else {
+        const up = e.up, active = (SHOP.biomes || []).find(x => x.active) || { id: 'aquatic' };
+        html = `<div class="showtank"><img class="tankimg" src="/assets/_bg/${BIOME_IMG[active.id] || 'tank_aqua_a.png'}?v=1" alt="">` +
+          `<div class="tkname">⬆️ ${esc(up.name)}</div>` +
+          `<div class="tkdesc">A roomier home — ${up.slots} décor slots, and comfier for everyone (stats decay slower).</div>` +
+          `<button class="buy" data-buy="tank">upgrade · ${up.cost} pts</button></div>`;
+      }
+      $('view').innerHTML = html;
+      wireBuys();
+    }
+
+    function renderMon() {
+      const list = mons();
+      if (!list.length) { $('view').innerHTML = '<div style="text-align:center;color:#b07d4e;padding:30px">no creatures</div>'; setPager(0, 0); return; }
+      if (page.mon >= list.length) page.mon = 0;
+      setPager(page.mon, list.length);
+      const c = list[page.mon], sp = REG[c.id] || {};
+      const rc = c.rarityColor || '#b07d4e';
+      let btn, foot, fc = '';
+      const stats = c.stats ? `vigor ${c.stats.vigor} · wit ${c.stats.wit} · speed ${c.stats.speed}` : '';
+      if (c.owned) { btn = `<button class="buy" disabled>✓ in your family</button>`; foot = 'part of the family'; fc = 'good'; }
+      else if (c.comingSoon) { btn = `<button class="buy" disabled>hatching soon</button>`; foot = 'not ready yet'; fc = 'locked'; }
+      else if (c.needsBiome) { btn = `<button class="buy" disabled>needs home</button>`; foot = `unlock the ${c.needsBiome} habitat first`; fc = 'locked'; }
+      else { btn = `<button class="buy" data-buy="${c.id}">adopt · ${c.cost} pts</button>`; foot = `${c.cost} pts`; }
+
+      $('view').innerHTML = `<div class="showmon">` +
+        `<canvas class="moncv" width="${sp.sprite ? sp.sprite.frameW : 48}" height="${sp.sprite ? sp.sprite.frameH : 48}"></canvas>` +
+        `<div class="mnm">${esc(c.name)} <span class="mrar" style="color:${rc}">${c.rarity || ''}</span></div>` +
+        `<div class="mdesc">${esc(short(c.blurb, 120))}</div>` +
+        `<div class="mstats">${stats}</div>` +
+        `<div class="foot ${fc}">${esc(foot)}</div>${btn}</div>`;
+      wireBuys();
+
+      // animate the idle sprite (no biome behind it — just the character)
+      if (sp.sprite) {
+        const cv = $('view').querySelector('canvas');
+        const p = { cx: cv.getContext('2d'), img: new Image(), fw: sp.sprite.frameW, n: sp.sprite.frames || 1, fps: sp.sprite.fps || 8, fx: sp.sprite.fx, cur: 0, last: null, ok: false };
+        p.cx.imageSmoothingEnabled = false;
+        p.img.onload = () => (p.ok = true);
+        p.img.src = '/assets/' + sp.sprite.sheet + '?v=1';
+        port = p;
+      }
+    }
+
+    (function loop(now) {
+      const p = port;
+      if (p && p.ok) {
+        if (p.last == null) p.last = now;
+        if (now - p.last >= 1000 / (p.fps || 8)) { p.cur = (p.cur + 1) % p.n; p.last = now; }
+        p.cx.clearRect(0, 0, p.fw, p.fw);
+        p.cx.drawImage(p.img, p.cur * p.fw, 0, p.fw, p.fw, 0, 0, p.fw, p.fw);
+        if (p.fx && window.drawLightningFx) window.drawLightningFx(p.cx, p.fx.spots, 0, 0, 1);
+      }
+      requestAnimationFrame(loop);
+    })(performance.now());
+
+    // ---- actions ----
+    function wireBuys() {
+      $('view').querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', () => act('/api/shop/buy', { item: b.dataset.buy })));
+      $('view').querySelectorAll('[data-switch]').forEach(b => b.addEventListener('click', () => act('/api/shop/switch', { biome: b.dataset.switch })));
+    }
+    async function act(url, payload) {
+      if (!TOKEN) { try { TOKEN = (await (await fetch('/api/lab/token')).json()).token; } catch { return toast('server unreachable'); } }
+      try {
+        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': TOKEN }, body: JSON.stringify(payload) });
+        const d = await r.json();
+        if (d.error) return toast('⚠ ' + d.error);
+        if (d.bought) toast('✅ got ' + d.bought + '!');
+        load();
+      } catch { toast('something went wrong'); }
+    }
+
+    // ---- navigation ----
+    function setTab(t) { tab = t; render(); }
+    function flip(dir) {
+      const n = tab === 'items' ? Math.max(1, Math.ceil(items().length / 4)) : tab === 'tanks' ? tanks().length : mons().length;
+      if (!n) return;
+      page[tab] = (page[tab] + dir + n) % n;
+      render();
+    }
+    document.querySelectorAll('#tabs .tab').forEach(el => el.addEventListener('click', () => setTab(el.dataset.tab)));
+    $('prev').addEventListener('click', () => flip(-1));
+    $('next').addEventListener('click', () => flip(1));
+    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') flip(-1); if (e.key === 'ArrowRight') flip(1); });
+    window.addEventListener('cb-nav', (e) => {
+      if (e.detail === 'left') { e.preventDefault(); flip(-1); }
+      else if (e.detail === 'right') { e.preventDefault(); flip(1); }
+      else if (e.detail === 'up' || e.detail === 'down') { e.preventDefault(); setTab(TABS[(TABS.indexOf(tab) + (e.detail === 'down' ? 1 : TABS.length - 1)) % TABS.length]); }
+    });
+    // A button: buy the shown tank / creature
+    window.addEventListener('cb-a', (e) => {
+      const btn = $('view').querySelector('.buy:not([disabled])');
+      if (btn && tab !== 'items') { e.preventDefault(); btn.click(); }
+    });
+
+    load();
+  </script>
+</body>
+</html>

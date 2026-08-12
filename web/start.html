@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claudemon — Choose Your Egg</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%A5%9A%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{--ink:#eaf0ff;--dim:#8fa0cf;--teal:#3ac0a0;--line:#26305a;}
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;}
+    body{background:radial-gradient(120% 100% at 50% 0%,#1b2b52,#080d1e 72%);color:var(--ink);
+      font-family:"Courier New",monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:24px 16px;overflow:hidden;}
+    h1{letter-spacing:8px;color:var(--teal);font-size:34px;margin:0;text-shadow:2px 2px 0 #0a3d2a;}
+    .tag{color:var(--dim);font-size:13px;margin:8px 0 4px;}
+    .prompt{font-size:16px;margin:14px 0 26px;color:var(--ink);}
+    .eggs{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;}
+    .egg{background:linear-gradient(180deg,#131a36,#0d1330);border:2px solid var(--line);border-bottom-width:6px;
+      border-radius:16px;padding:16px 14px 18px;width:210px;text-align:center;cursor:pointer;transition:transform .12s,border-color .12s;}
+    .egg:hover{transform:translateY(-6px);border-color:var(--teal);}
+    .egg.chosen{border-color:var(--teal);}
+    .egg.dim{opacity:.35;pointer-events:none;}
+    canvas{image-rendering:pixelated;display:block;margin:0 auto;}
+    .bname{font-size:15px;font-weight:bold;margin-top:6px;}
+    .binfo{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.4;min-height:44px;}
+    .reveal{font-size:12px;color:var(--teal);margin-top:6px;min-height:16px;}
+    .foot{color:var(--dim);font-size:11px;margin-top:26px;}
+    #done{position:fixed;inset:0;background:#080d1e;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20;}
+    #done h2{color:var(--teal);letter-spacing:3px;}
+  </style>
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    /* ── pixel LIGHT (orange/white) theme ── */
+    body{font-family:var(--font-body)!important;letter-spacing:.5px;background:#fff6ec!important;color:#3a2617!important;}
+    h1{font-family:var(--font-title)!important;font-size:22px!important;letter-spacing:2px!important;line-height:1.5;color:#f5793b!important;text-shadow:3px 3px 0 #ffcf9f!important;}
+    .tag,.foot{color:#b07d4e!important;}
+    .prompt{color:#3a2617!important;}
+    .egg{border-radius:0!important;background:#fff!important;border:3px solid #c25e2a!important;}
+    .egg:hover{border-color:#f5793b!important;}
+    .egg.chosen{border-color:#f5793b!important;}
+    .bname{font-family:var(--font-title);font-size:11px;line-height:1.6;color:#c25e2a!important;}
+    .binfo{color:#6a4f36!important;}
+    .reveal{color:#f5793b!important;}
+    #done{background:#fff6ec!important;} #done h2{color:#f5793b!important;}
+    button{border-radius:0!important;border:3px solid #c25e2a!important;box-shadow:3px 3px 0 #c25e2a;font-family:var(--font-body);font-weight:700;background:#f5793b!important;color:#fff!important;}
+  </style>
+</head>
+<body>
+  <h1>CLAUDEMON</h1>
+  <div class="tag">a home for your Claude, and the little agents that live in it</div>
+  <div class="prompt">🥚 three eggs are warming. which one hatches?</div>
+  <div class="eggs" id="eggs"></div>
+  <div class="foot">choose carefully — this becomes your home tank &amp; first friend (you can unlock the others later)</div>
+
+  <div id="done"><h2 id="donemsg">hatching…</h2><canvas id="dc" width="64" height="64" style="width:200px;height:200px"></canvas></div>
+
+  <script src="/fx.js"></script>
+  <script>
+    const EGG_SHAPE = [
+      '00011111000','00111111100','01111111110','01111111110',
+      '11111111111','11111111111','11111111111','11111111111',
+      '11111111111','01111111110','01111111110','00111111100','00011111000',
+    ];
+    const PAL = {
+      blue:   { body:'#4a90d9', dark:'#2c5f97', light:'#bfe0ff', spot:'#2c5f97' },
+      green:  { body:'#4abe6a', dark:'#2c7a45', light:'#c7ffd6', spot:'#2c7a45' },
+      orange: { body:'#ef9b3b', dark:'#b56316', light:'#ffe1b0', spot:'#b56316' },
+    };
+    const SPOTS = [[3,4],[7,6],[4,8],[8,9],[5,10]];
+
+    function drawEgg(ctx, pal, t, cracked) {
+      const px = 6, W = EGG_SHAPE[0].length, H = EGG_SHAPE.length;
+      const ox = (ctx.canvas.width - W * px) / 2;
+      const oy = (ctx.canvas.height - H * px) / 2 + Math.sin(t * 0.08) * 3;
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.save();
+      const wob = Math.sin(t * 0.11) * 0.05;
+      ctx.translate(ctx.canvas.width / 2, oy + H * px);
+      ctx.rotate(wob); ctx.translate(-ctx.canvas.width / 2, -(oy + H * px));
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (EGG_SHAPE[y][x] !== '1') continue;
+        let c = pal.body;
+        if (x < 4 && y < 5) c = pal.light;
+        for (const [sx, sy] of SPOTS) if (sx === x && sy === y) c = pal.spot;
+        ctx.fillStyle = c; ctx.fillRect(ox + x * px, oy + y * px, px, px);
+      }
+      if (cracked) { // jagged crack line
+        ctx.fillStyle = '#0d1330';
+        ctx.fillRect(ox + 5 * px, oy + 4 * px, px, px);
+        ctx.fillRect(ox + 4 * px, oy + 5 * px, px, px);
+        ctx.fillRect(ox + 5 * px, oy + 6 * px, px, px);
+        ctx.fillRect(ox + 6 * px, oy + 6 * px, px, px);
+        ctx.fillRect(ox + 5 * px, oy + 7 * px, px, px);
+      }
+      ctx.restore();
+    }
+
+    let TOKEN = null, chosen = false, REG = {}, EGGS = {}, t = 0;
+
+    (async () => {
+      const spd = await (await fetch('/api/species')).json();
+      for (const s of spd.species) REG[s.id] = s;
+      EGGS = spd.eggs;
+      const cont = document.getElementById('eggs');
+      const order = ['aquatic', 'vivarium', 'desert'];
+      const cards = [];
+      for (const biome of order) {
+        const e = EGGS[biome]; const sp = REG[e.species];
+        const card = document.createElement('div'); card.className = 'egg';
+        card.innerHTML = `<canvas width="90" height="130"></canvas>
+          <div class="bname">${e.emoji} ${e.label}</div>
+          <div class="binfo">${({aquatic:'ocean',vivarium:'forest',desert:'desert'})[biome]} biome<br>hatches ${sp.emoji} <b>${sp.name}</b> — ${sp.blurb}</div>
+          <div class="reveal">click to hatch</div>`;
+        cont.appendChild(card);
+        const cv = card.querySelector('canvas'), cx = cv.getContext('2d');
+        const rec = { biome, e, sp, card, cx, cracked: false };
+        card.addEventListener('click', () => hatch(rec, cards));
+        cards.push(rec);
+      }
+      (function loop() {
+        t++;
+        for (const r of cards) if (!r.done) drawEgg(r.cx, PAL[r.e.egg], t + r.biome.length * 9, r.cracked);
+        requestAnimationFrame(loop);
+      })();
+    })();
+
+    async function hatch(rec, cards) {
+      if (chosen) return; chosen = true;
+      for (const r of cards) if (r !== rec) r.card.classList.add('dim');
+      rec.card.classList.add('chosen');
+      rec.card.querySelector('.reveal').textContent = 'hatching…';
+      // shudder + crack
+      let n = 0;
+      const shud = setInterval(() => { rec.cracked = (n % 2 === 0) && n > 6; n++; }, 90);
+      if (!TOKEN) { try { TOKEN = (await (await fetch('/api/lab/token')).json()).token; } catch {} }
+      setTimeout(async () => {
+        clearInterval(shud);
+        try {
+          await fetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': TOKEN }, body: JSON.stringify({ biome: rec.biome }) });
+        } catch {}
+        showHatched(rec.sp);
+      }, 1400);
+    }
+
+    function showHatched(sp) {
+      const done = document.getElementById('done'); done.style.display = 'flex';
+      document.getElementById('donemsg').textContent = `it's ${sp.name}!`;
+      const cx = document.getElementById('dc').getContext('2d'); cx.imageSmoothingEnabled = false;
+      const img = new Image(); let cur = 0, ok = false;
+      img.onload = () => ok = true; img.src = '/assets/' + sp.sprite.sheet + '?v=' + Date.now();
+      const fw = sp.sprite.frameW, n = sp.sprite.frames || 1;
+      setInterval(() => { if (!ok) return; cx.clearRect(0, 0, 64, 64); cx.drawImage(img, (cur % n) * fw, 0, fw, fw, 8, 8, 48, 48); cur++; }, 1000 / (sp.sprite.fps || 8));
+      setTimeout(() => { location.href = '/'; }, 2600);
+    }
+  </script>
+</body>
+</html>

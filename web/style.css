@@ -1,0 +1,137 @@
+/* Claudemon tank — full PIXEL video-game UI (uses shared pixel.css for fonts) */
+:root {
+  --bg: #fff6ec;       /* warm white */
+  --panel: #ffffff;
+  --ink: #3a2617;      /* dark warm brown text */
+  --dim: #b07d4e;
+  --accent: #f5793b;   /* orange */
+  --warn: #e8a33d;
+  --bad: #e5484d;
+  --line: #f4d3ac;
+  --edge: #c25e2a;     /* orange-brown — chunky pixel borders + hard shadows */
+  --nav-on: #f5793b;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: none; image-rendering: pixelated;
+  min-height: 100vh;
+}
+/* ~33% bigger than before (440 → 580) so the game reads close & focused */
+#app {
+  width: 100%; margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  flex: 1 1 auto;   /* fill the screen; the tank covers it edge-to-edge */
+}
+/* the tank fills the screen exactly — never scroll it, so no orange scrollbar shows */
+.device .screen { overflow: hidden; }
+header { text-align: center; }
+/* the console body already shows CLAUDEBOY; hide the in-screen game title */
+h1 { display: none; }
+#subtitle { display: none; }
+
+/* nav tabs — chunky pixel buttons */
+#nav { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+#nav a {
+  font-weight: 700; font-size: 11px; text-decoration: none; color: var(--dim);
+  background: var(--panel); padding: 6px 7px;
+  border: 3px solid var(--edge); box-shadow: 2px 2px 0 var(--edge);
+}
+#nav a:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--edge); }
+#nav a.on { color: #fff; background: var(--nav-on); }
+
+/* the tank fills the whole screen — its art IS the LCD (the screen bezel frames it) */
+#tank-wrap { position: relative; flex: 1 1 auto; width: 100%; max-width: none; margin: 0; container-type: inline-size; }
+canvas#tank {
+  width: 100%; height: 100%; display: block; image-rendering: pixelated;
+  border: 0; background: #08122b;
+}
+#speech {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: #fffbe6; color: #26233a; padding: 6px 11px; font-size: 12px; max-width: 82%;
+  border: 3px solid #26233a; white-space: normal; line-height: 1.35; text-align: center; text-wrap: balance;
+}
+#speech::after { content: ''; position: absolute; bottom: -9px; left: 50%; border: 5px solid transparent; border-top-color: #26233a; }
+.hidden { display: none !important; }
+
+/* action buttons — clean pixel icons sitting on the tank's wood shelf */
+#controls {
+  position: absolute; left: 5%; right: 5%; bottom: 4.5%; height: 12%;
+  display: flex; justify-content: space-around; align-items: center; gap: 2%;
+}
+#controls button { background: none; border: 0; padding: 2px; cursor: pointer; line-height: 0; transition: transform .06s; }
+#controls button:active { transform: translateY(2px); }
+#controls button img { width: clamp(18px, 7.5cqw, 26px); height: clamp(18px, 7.5cqw, 26px); image-rendering: pixelated; display: block; }
+
+#nameplate { display: flex; align-items: center; gap: 10px; justify-content: center; }
+#emoji { font-size: 22px; }
+#petname { font-weight: 700; font-size: 17px; letter-spacing: 1px; }
+.tag { font-size: 11px; padding: 3px 8px; background: var(--panel); color: var(--dim); border: 2px solid var(--edge); }
+.tag.stage { color: var(--accent); }
+
+#statuses { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 20px; }
+.schip { font-size: 11px; padding: 3px 8px; background: #fff1e2; border: 2px solid var(--edge); color: #a0552a; cursor: default; }
+.soon { color: #8fa0cf; font-size: 11px; padding: 0 8px; }
+
+/* stat meters — segmented pixel bars */
+#stats { display: flex; flex-direction: column; gap: 8px; }
+.stat { display: grid; grid-template-columns: 108px 1fr; align-items: center; gap: 10px; font-size: 12px; }
+.stat label { color: var(--dim); }
+.track { height: 18px; background: #fff2e2; border: 3px solid var(--edge); overflow: hidden; }
+.fill {
+  height: 100%; width: 70%; background: var(--accent);
+  background-image: repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, transparent 2px 11px);
+  transition: width .4s ease, background .4s;
+}
+
+#meta { display: flex; gap: 18px; justify-content: center; font-size: 12px; color: var(--dim); }
+#meta b { color: var(--ink); }
+
+button { font-family: var(--font-body); font-weight: 700; font-size: 13px; cursor: pointer; color: var(--ink); background: var(--panel); border: 3px solid var(--edge); box-shadow: 3px 3px 0 var(--edge); padding: 8px 11px; }
+button:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--edge); }
+
+#log { font-size: 11px; color: var(--dim); text-align: center; min-height: 0; }
+
+/* shop — pixel panel */
+#shop { background: var(--panel); border: 3px solid var(--edge); box-shadow: 4px 4px 0 var(--edge); overflow: hidden; }
+#shophead { padding: 11px 13px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--accent); user-select: none; }
+#shophead .chev { float: right; color: var(--dim); transition: transform .2s; }
+#shop.open #shophead .chev { transform: rotate(180deg); }
+#shopbody { display: none; padding: 4px 12px 12px; }
+#shop.open #shopbody { display: block; }
+.shopstat { font-size: 11px; color: var(--dim); padding: 4px 2px 8px; }
+.shopstat b { color: var(--accent); }
+.shopitem { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 2px solid var(--line); }
+.si-name { flex: 1; font-size: 12px; }
+.si-name small { display: block; color: var(--dim); font-size: 10px; }
+.shopitem .buy { font-size: 11px; padding: 6px 11px; background: var(--nav-on); color: #fff; }
+.owned { color: var(--accent); font-size: 12px; padding: 0 8px; }
+
+/* ---- Classic panel layout: the screen is just the game; HUD + menu are pop-ups ---- */
+#nav { display: none; }
+#hud { display: none; }
+
+/* STATS pop-up — toggled by the A button */
+body.stats-open #hud {
+  display: flex; flex-direction: column; gap: 9px;
+  position: absolute; inset: 0; z-index: 30;
+  background: rgba(18,12,6,0.95); padding: 16px 16px 18px; overflow-y: auto;
+}
+.hud-title { font-family: var(--font-title); font-size: 11px; color: #ffb347; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; letter-spacing: 1px; }
+.hud-x { cursor: pointer; color: #ffb347; }
+body.stats-open #petname { color: #ffe9d0; }
+body.stats-open #nameplate .tag { color: #ffcf9f; background: #3a2414; border-color: #7a3d12; }
+body.stats-open .stat label { color: #e0b088; }
+body.stats-open #meta { color: #d8b088; }
+body.stats-open #meta b { color: #fff; }
+body.stats-open .schip { color: #e0b088; background: #2a1a0e; border-color: #7a3d12; }
+body.stats-open #log { color: #b8905e; }
+
+/* MENU pop-up — toggled by the B button (the nav) */
+body.menu-open #nav {
+  display: flex; flex-direction: column; gap: 10px; align-items: stretch; justify-content: center;
+  position: absolute; inset: 0; z-index: 30;
+  background: rgba(18,12,6,0.95); padding: 24px;
+}
+body.menu-open #nav a { text-align: center; font-size: 14px; padding: 12px; }

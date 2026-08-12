@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Claudemon — Creature Codex</title>
+<style>
+  :root{--bg:#0a1226;--panel:#131a36;--ink:#eaf0ff;--dim:#8fa0cf;--teal:#3ac0a0;--line:#26305a;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:var(--ink);
+    font-family:"Courier New",monospace;min-height:100vh;padding:22px 16px 50px;}
+  h1{text-align:center;letter-spacing:8px;margin:6px 0 2px;color:var(--teal);text-shadow:2px 2px 0 #0a3d2a;font-size:30px;}
+  .sub{text-align:center;color:var(--dim);font-size:13px;margin-bottom:24px;}
+  .tree{max-width:1150px;margin:0 auto;display:flex;flex-direction:column;gap:24px;align-items:center;}
+  .row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;align-items:flex-end;}
+  .branch{gap:56px;}
+  .col{display:flex;flex-direction:column;gap:16px;align-items:center;}
+  .blabel{font-size:12px;letter-spacing:2px;padding:3px 12px;border-radius:12px;border:1px solid var(--line);}
+  .radiant{color:#8fe9ff;background:#0e2a33;} .feral{color:#ff9a6b;background:#301a12;}
+  .card{background:linear-gradient(180deg,var(--panel),#0e1430);border:2px solid var(--line);border-bottom-width:5px;
+    border-radius:14px;width:184px;padding:12px 10px;text-align:center;}
+  .stage{font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:4px;}
+  .tank{height:140px;display:flex;align-items:flex-end;justify-content:center;position:relative;}
+  .tank canvas{image-rendering:pixelated;animation:wander 7s ease-in-out infinite;}
+  .name{font-weight:bold;font-size:15px;margin-top:6px;}
+  .blurb{font-size:10.5px;color:var(--dim);line-height:1.35;margin-top:3px;min-height:40px;}
+  .arrow{color:var(--dim);font-size:22px;align-self:center;}
+  @keyframes wander{0%{transform:translateX(-20px) scaleX(1)}46%{transform:translateX(20px) scaleX(1)}
+    50%{transform:translateX(20px) scaleX(-1)}96%{transform:translateX(-20px) scaleX(-1)}100%{transform:translateX(-20px) scaleX(1)}}
+  .card:nth-child(odd) .tank canvas{animation-duration:8.5s;}
+</style>
+</head>
+<body>
+  <h1>CLAUDEMON</h1>
+  <div class="sub">Creature Codex · the Clawde evolution line · live animated sprites</div>
+  <div class="tree" id="tree"></div>
+
+<script>
+const META={
+  egg:{name:'Egg',stage:'Stage 0',blurb:'A speckled teal egg. Something plucky stirs inside.'},
+  blip:{name:'Blip',stage:'Stage 1 · Baby',blurb:'A squishy teal blob with enormous eyes.'},
+  clawde:{name:'Clawde',stage:'Stage 2 · Rookie',blurb:'The plucky pixel crab. Loyal, snappy, dramatic.'},
+  prismshell:{name:'Prismshell',stage:'Stage 3 · Champion',blurb:'Well-loved — a crystal-shelled crab.'},
+  rustclaw:{name:'Rustclaw',stage:'Stage 3 · Champion',blurb:'Neglected — rusty, scarred, big chipped claw.'},
+  aurelian:{name:'Aurelian',stage:'Stage 4 · Ultimate',blurb:'A golden crab-king. Regal and radiant.'},
+  voidmaw:{name:'Voidmaw',stage:'Stage 4 · Ultimate',blurb:'A glitched abyssal crab. Powerful, eerie.'},
+};
+
+function makeCard(id,meta){
+  const m=META[id]; if(!m)return document.createTextNode('');
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`<div class="stage">${m.stage}</div><div class="tank"></div><div class="name">${m.name}</div><div class="blurb">${m.blurb}</div>`;
+  const cv=document.createElement('canvas'); const disp=118; cv.width=disp; cv.height=disp;
+  card.querySelector('.tank').appendChild(cv);
+  const cx=cv.getContext('2d'); cx.imageSmoothingEnabled=false;
+  const img=new Image();
+  const fw=meta.frameW,fh=meta.frameH,frames=(meta.anims.idle||meta.anims.walk).frames,fps=meta.fps||8;
+  let cur=0,ok=false; img.onload=()=>ok=true; img.src='/assets/'+meta.sheet+'?v=3';
+  setInterval(()=>{ if(!ok)return; cx.clearRect(0,0,disp,disp); const sx=(cur%frames)*fw;
+    try{cx.drawImage(img,sx,0,fw,fh,0,0,disp,disp);}catch(e){} cur++; },1000/fps);
+  return card;
+}
+
+(async()=>{
+  const man=await (await fetch('/assets/manifest.json?v=3')).json();
+  const F=man.forms;
+  const tree=document.getElementById('tree');
+  const babies=document.createElement('div'); babies.className='row';
+  ['egg','blip','clawde'].forEach((id,i)=>{ babies.appendChild(makeCard(id,F[id])); if(i<2){const a=document.createElement('span');a.className='arrow';a.textContent='→';babies.appendChild(a);} });
+  tree.appendChild(babies);
+  const branch=document.createElement('div'); branch.className='row branch';
+  for(const [cls,label,pair] of [['radiant','RADIANT · keep it happy',['prismshell','aurelian']],['feral','FERAL · neglect it',['rustclaw','voidmaw']]]){
+    const col=document.createElement('div'); col.className='col';
+    const lbl=document.createElement('span'); lbl.className='blabel '+cls; lbl.textContent=label; col.appendChild(lbl);
+    const row=document.createElement('div'); row.className='row';
+    row.appendChild(makeCard(pair[0],F[pair[0]])); const a=document.createElement('span');a.className='arrow';a.textContent='→';row.appendChild(a); row.appendChild(makeCard(pair[1],F[pair[1]]));
+    col.appendChild(row); branch.appendChild(col);
+  }
+  tree.appendChild(branch);
+})();
+</script>
+</body>
+</html>

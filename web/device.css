@@ -1,0 +1,55 @@
+/* Claudemon DEVICE shell — Game Boy-style handheld (white/orange). The game
+   renders in .screen; the physical controls sit in .deck / above the stats.
+   Injected by device.js. */
+:root{ --dev-body:#fbf3e8; --dev-edge:#c25e2a; --dev-edge2:#a34a18; --dev-orange:#f5793b; --dev-screen:#fff6ec; --dev-bezel:#2a2320; --dev-desk:#e6d2b6; }
+
+html,body{ height:100%; }
+body{ margin:0; background:var(--dev-desk) !important; min-height:100vh; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; padding:10px; }
+
+.device{
+  position:relative;   /* positioning context for editor-placed buttons */
+  zoom:1.3;   /* enlarge the whole handheld ~30% */
+  width:min(480px, 72vw); max-height:calc((100vh - 20px) / 1.3); margin:0;
+  display:flex; flex-direction:column;
+  background:linear-gradient(#ff9a48,#f5793b);   /* CLAUDEBOY orange plastic */
+  border:6px solid #b5451a; border-top-width:8px;
+  border-radius:16px 16px 72px 18px;   /* Game Boy silhouette */
+  padding:12px 12px 0;
+  box-shadow:0 0 0 3px #8f3910 inset;
+}
+/* CLAUDEBOY wordmark stamped on the console body, above the screen */
+.cb-brand{
+  flex:0 0 auto; text-align:center; font-family:var(--font-title); font-size:13px;
+  color:#fff; text-shadow:2px 2px 0 #8f3910; letter-spacing:1px; padding:2px 0 8px;
+}
+.screen{
+  position:relative;   /* HUD / menu pop-ups overlay the screen */
+  /* LOCKED to the biome art shape (512x480) — identical on every page; nothing
+     renders bigger than this. The tank fills it exactly (same aspect). */
+  flex:0 0 auto; width:100%; aspect-ratio:512 / 480; min-height:0;
+  overflow-y:auto; overflow-x:hidden;
+  display:flex; flex-direction:column;
+  background:var(--dev-screen); border:6px solid #0d0b07; border-radius:6px;
+}
+.screen::-webkit-scrollbar{ width:9px; }
+.screen::-webkit-scrollbar-thumb{ background:var(--dev-edge); border:2px solid #0d0b07; }
+.screen::-webkit-scrollbar-track{ background:#efe1cd; }
+
+/* ---- Classic console controls: d-pad · CLAUDEMON · A/B (one row below the screen) ---- */
+.dpad{ position:relative; width:60px; height:60px; flex:0 0 auto; cursor:pointer; }
+.dpad::before,.dpad::after{ content:''; position:absolute; background:#14110c; border-radius:3px; }
+.dpad::before{ left:21px; top:0; width:18px; height:60px; }
+.dpad::after{ left:0; top:21px; width:60px; height:18px; }
+.brand{ font-family:var(--font-title,'PressStart'); font-size:11px; color:#7a2f10; letter-spacing:1px; }
+.ab{ display:flex; gap:10px; transform:rotate(-16deg); flex:0 0 auto; }
+.pbtn2{ width:42px; height:42px; border-radius:50%; background:#ffb347; border:3px solid #14110c; color:#7a2f10; font-family:var(--font-title,'PressStart'); font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; }
+.pbtn2:active{ transform:translateY(2px); }
+/* clicky press feedback (also fired programmatically via .cb-press) */
+.pbtn2.cb-press{ transform:translateY(3px); filter:brightness(1.14); box-shadow:inset 0 0 0 3px rgba(0,0,0,.22); }
+.dpad{ transition:transform .06s ease; }
+.dpad.cb-press{ transform:scale(.9); }
+
+.deck{ flex:0 0 auto; margin-top:auto; display:flex; align-items:center; justify-content:space-between; padding:11px 26px 14px; }
+
+@media (max-width:480px){ .device{ border-radius:12px 12px 48px 14px; } }

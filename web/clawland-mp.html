@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Clawland · Online</title>
+<style>
+  :root{ --ink:#f0e6d8; --accent:#f5793b; --edge:#c25e2a; --dim:#a5917c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; height:100%; overflow:hidden; background:#0b120f; color:var(--ink); font-family:ui-monospace,'Courier New',monospace; touch-action:none; }
+  #game{ display:block; image-rendering:pixelated; cursor:crosshair; }
+  .hud{ position:fixed; z-index:5; pointer-events:none; }
+  #card{ top:10px; left:10px; background:rgba(14,18,15,.82); border:2px solid var(--edge); border-radius:10px; padding:8px 11px; min-width:180px; }
+  #card .nm{ font-size:14px; font-weight:700; } #card .sub{ font-size:11px; color:var(--dim); margin-top:3px; }
+  #card .bar{ height:7px; border-radius:4px; background:#0e0b07; margin-top:5px; overflow:hidden; } #card .bar i{ display:block; height:100%; }
+  #conn{ top:10px; right:12px; font-size:12px; color:var(--dim); background:rgba(14,18,15,.7); border:1px solid #2c2620; border-radius:7px; padding:5px 9px; }
+  #hint{ bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--dim); background:rgba(14,18,15,.6); border-radius:7px; padding:4px 10px; }
+  #ov{ position:fixed; inset:0; z-index:9; background:rgba(8,12,10,.93); display:flex; align-items:center; justify-content:center; }
+  .box{ background:#14130f; border:3px solid var(--edge); border-radius:14px; padding:22px 20px; width:92%; max-width:440px; text-align:center; max-height:92vh; overflow:auto; }
+  h1{ margin:0 0 2px; font-size:26px; letter-spacing:1px; background:linear-gradient(90deg,#ffd23f,#f5793b); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .subhead{ color:var(--dim); font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:14px; }
+  .frow{ display:flex; align-items:center; gap:8px; justify-content:center; margin:8px 0; }
+  .frow label{ font-size:12px; color:var(--dim); width:44px; text-align:right; }
+  input[type=text]{ font-family:inherit; font-size:13px; padding:6px 8px; border-radius:7px; border:2px solid #2c2620; background:#0f0c09; color:var(--ink); }
+  #pick{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; margin:10px 0 14px; max-height:210px; overflow:auto; }
+  .pk{ width:66px; border:2px solid #2c2620; border-radius:10px; padding:5px 3px; cursor:pointer; background:#0f0c09; }
+  .pk.sel{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); } .pk canvas{ width:44px; height:44px; image-rendering:pixelated; } .pk .n{ font-size:9px; color:var(--dim); margin-top:2px; }
+  .btn{ font-family:inherit; font-weight:700; font-size:20px; letter-spacing:2px; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); border-radius:9px; padding:12px 30px; cursor:pointer; width:100%; margin-top:8px; }
+  .btn:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+  .status{ font-size:12px; color:#8fe06a; min-height:16px; margin-top:8px; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="card" class="hud" style="display:none"><div class="nm" id="pn">—</div><div class="sub" id="ps">—</div><div class="bar"><i id="hp" style="background:#e0563a;width:100%"></i></div></div>
+<div id="conn" class="hud" style="display:none">connecting…</div>
+<div id="hint" class="hud" style="display:none">WASD move · aim with mouse · click to attack</div>
+<div id="ov"><div class="box" id="ovbox"></div></div>
+
+<script src="/fx-attacks.js"></script>
+<script>
+'use strict';
+const CV=document.getElementById('game'), X=CV.getContext('2d'), $=(id)=>document.getElementById(id);
+let off=document.createElement('canvas'), offx=off.getContext('2d');
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+let DPR=Math.min(2,devicePixelRatio||1), VW=0, VH=0;
+function resize(){ VW=innerWidth; VH=innerHeight; CV.width=VW*DPR; CV.height=VH*DPR; CV.style.width=VW+'px'; CV.style.height=VH+'px'; X.setTransform(DPR,0,0,DPR,0,0); X.imageSmoothingEnabled=false; }
+addEventListener('resize',resize); resize();
+
+// ================= TERRAIN (identical gen to the server's biome map) =================
+let WORLD=21000, SEED=7777, CELL=6, nE,nM,nW,nR,nS, cam={x:WORLD/2,y:WORLD/2};
+function mkNoise(seed){ const h=(x,y)=>{ let n=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(seed,69069); n=Math.imul(n^n>>>13,1274126177); return ((n^n>>>16)>>>0)/4294967296; };
+  const s=(x,y)=>{ const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,tl=h(xi,yi),tr=h(xi+1,yi),bl=h(xi,yi+1),br=h(xi+1,yi+1),u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf); return tl*(1-u)*(1-v)+tr*u*(1-v)+bl*(1-u)*v+br*u*v; };
+  return (x,y,oct)=>{ let a=0,amp=0.5,f=1; oct=oct||4; for(let i=0;i<oct;i++){a+=s(x*f,y*f)*amp;f*=2;amp*=0.5;} return a; }; }
+function seedWorld(){ nE=mkNoise(SEED*3+1); nM=mkNoise(SEED*7+5); nW=mkNoise(SEED*11+9); nR=mkNoise(SEED*17+3); nS=mkNoise(SEED*23+7); }
+function h2(x,y,s){ let n=Math.imul(x|0,668265263)+Math.imul(y|0,374761393)+Math.imul(s,2246822519); n=Math.imul(n^n>>>13,1274126177); return ((n^n>>>15)>>>0)/4294967296; }
+function sample(x,y){ const e=nE(x/1700,y/1700,5); const wv=nW(x/1150+80,y/1150,4); const rv=Math.abs(nR(x/3000,y/3000+20,3)-0.5);
+  if(e<0.34) return {t:0,e}; if(wv<0.235) return {t:0,e:0.30}; if(rv<0.006) return {t:1,e:0.36};
+  const m=nM(x/1400+55,y/1400,4); const sw=nS(x/900+30,y/900,3);
+  if(e<0.49&&m>0.52&&sw>0.66) return {t:7,e}; if(e<0.40) return {t:2,e}; if(e>0.74) return {t:6,e}; if(m<0.37) return {t:5,e}; if(m>0.60) return {t:4,e}; return {t:3,e}; }
+function texColor(wx,wy){ const b=sample(wx,wy), t=b.t; const n1=h2(Math.floor(wx/6),Math.floor(wy/6),SEED), n2=h2(Math.floor(wx/3),Math.floor(wy/3),SEED+9);
+  if(t===0){ const dep=Math.min(1,(0.34-b.e)/0.34); const rip=Math.sin(wx*0.03+wy*0.02)*0.5+0.5; return 'rgb('+(30+dep*4|0)+','+(110-dep*40+rip*16|0)+','+(150-dep*30|0)+')'; }
+  if(t===1){ const rip=Math.sin(wx*0.05+wy*0.03)*0.5+0.5; return rip>0.6?'#a6e0ef':'#8fd6ea'; }
+  if(t===2){ return n1>0.7?'#efe0b0':'#e8d6a0'; }
+  if(t===3){ const patch=nM(wx/220,wy/220,2); return patch>0.55?'#83cf58':(n1>0.82?'#8fd867':'#6fbf46'); }
+  if(t===4){ return n1>0.6?'#43923c':'#3f8a3a'; }
+  if(t===5){ const rip=Math.sin(wx*0.045)*0.5+0.5; return rip>0.62?'#ecd08a':(n2>0.85?'#d9b972':'#e3c583'); }
+  if(t===6){ return n2>0.7?'#a49c92':(n1>0.5?'#9a938a':'#8b857c'); }
+  if(t===7){ const rip=Math.sin(wx*0.04+wy*0.05)*0.5+0.5; return n1>0.7?'#5e6b3c':(rip>0.6?'#4d5e38':'#425231'); }
+  return '#6fbf46'; }
+const CH=256; const chunkCache=new Map();
+function genChunk(cx,cy){ const cv=document.createElement('canvas'); cv.width=CH; cv.height=CH; const c=cv.getContext('2d'); c.imageSmoothingEnabled=false; const ox=cx*CH,oy=cy*CH;
+  for(let by=0;by<CH;by+=CELL) for(let bx=0;bx<CH;bx+=CELL){ c.fillStyle=texColor(ox+bx+CELL*0.5,oy+by+CELL*0.5); c.fillRect(bx,by,CELL,CELL); }
+  chunkCache.set(cx+','+cy,cv);
+  if(chunkCache.size>170){ let fk=null,fd=-1; const pcx=cam.x/CH,pcy=cam.y/CH; for(const k of chunkCache.keys()){ const s=k.indexOf(','),a=+k.slice(0,s),b=+k.slice(s+1),d=(a-pcx)*(a-pcx)+(b-pcy)*(b-pcy); if(d>fd){fd=d;fk=k;} } if(fk)chunkCache.delete(fk); }
+  return cv; }
+let terr=document.createElement('canvas'), terrx=terr.getContext('2d');
+function drawTerrain(iw,ih){ if(terr.width!==iw||terr.height!==ih){terr.width=iw;terr.height=ih;} terrx.imageSmoothingEnabled=false;
+  const anchorX=Math.floor(cam.x-iw/2), anchorY=Math.floor(cam.y-ih/2); terrx.clearRect(0,0,iw,ih);
+  const vl=cam.x-iw/2,vt=cam.y-ih/2,vr=cam.x+iw/2,vb=cam.y+ih/2;
+  const c0x=Math.floor(vl/CH),c1x=Math.floor(vr/CH),c0y=Math.floor(vt/CH),c1y=Math.floor(vb/CH); let gen=0;
+  for(let cy=c0y;cy<=c1y;cy++) for(let cx=c0x;cx<=c1x;cx++){ let cv=chunkCache.get(cx+','+cy);
+    if(!cv){ if(gen<4){ cv=genChunk(cx,cy); gen++; } else { terrx.fillStyle=texColor(cx*CH+CH*0.5,cy*CH+CH*0.5); terrx.fillRect(cx*CH-anchorX,cy*CH-anchorY,CH,CH); continue; } }
+    terrx.drawImage(cv,cx*CH-anchorX,cy*CH-anchorY); }
+  for(let cy=c0y-1;cy<=c1y+1 && gen<7;cy++) for(let cx=c0x-1;cx<=c1x+1 && gen<7;cx++){ if(!chunkCache.has(cx+','+cy)){ genChunk(cx,cy); gen++; } }
+  offx.drawImage(terr, anchorX-(cam.x-iw/2), anchorY-(cam.y-ih/2)); }
+
+// ================= SPECIES / SPRITES =================
+let SPECIES={}, allies=[]; const imgc={};
+function img(url){ if(imgc[url])return imgc[url]; const o={img:new Image(),ok:false,n:1,fw:48}; o.img.onload=()=>{o.ok=true;o.n=Math.max(1,Math.round(o.img.width/o.img.height));o.fw=o.img.height;}; o.img.src=url; imgc[url]=o; return o; }
+const sheets={};
+function sheetsFor(id){ if(sheets[id])return sheets[id]; const sp=SPECIES[id]; sheets[id]={ idle:img('/assets/'+sp.sprite.sheet), walk:img('/assets/_anim/'+id+'-walk-right.png'), fw:sp.sprite.frameW||48 }; return sheets[id]; }
+const INVERT_FACE=new Set(['fernling','fennette']);
+const tierScale=(m)=>0.33+m*2.1, drawPx=(m)=>48*tierScale(m);
+function drawCreature(e){ const sx=e.rx, sy=e.ry, px=drawPx(e.mass); const sh=sheetsFor(e.id); const st=(e.moving&&sh.walk.ok)?sh.walk:sh.idle; const fw=st.ok?st.fw:sh.fw, n=st.ok?st.n:1, fr=Math.floor(e.anim)%n, dw=px, dh=px;
+  gx.globalAlpha=.26; gx.fillStyle='#000'; gx.beginPath(); gx.ellipse(sx,sy-dh*0.04,dw*0.22,dh*0.06,0,0,7); gx.fill(); gx.globalAlpha=1;
+  const flip=(e.face<0?1:-1)*(INVERT_FACE.has(e.id)?-1:1);
+  gx.save(); gx.translate(sx,sy-dh*0.30); gx.scale(flip,1);
+  if(st.ok)gx.drawImage(st.img,fr*fw,0,fw,fw,-dw/2,-dh/2,dw,dh); else { gx.fillStyle=e.col||'#f5793b'; gx.fillRect(-8,-8,16,16); }
+  gx.restore();
+  if(e.hp<e.mhp){ const w=Math.max(20,px*0.5); gx.fillStyle='#000a'; gx.fillRect(sx-w/2,sy-dh*0.5-7,w,3); gx.fillStyle=e.col; gx.fillRect(sx-w/2,sy-dh*0.5-7,w*clamp(e.hp/e.mhp,0,1),3); }
+  gx.font='10px monospace'; gx.textAlign='center'; gx.fillStyle='#0009'; gx.fillText(e.name,sx+1,sy-dh*0.5-11); gx.fillStyle=e.self?'#ffd23f':'#f3ead9'; gx.fillText(e.name,sx,sy-dh*0.5-12); gx.textAlign='left'; }
+
+// ================= NETCODE =================
+let gx=offx, ws=null, myId=0, me=null, serverMe=null, connected=false, realm='Phobos';
+let snaps=[], vfx=[], input={x:0,y:0}, aim={x:1,y:0}, atkQueued=false, mouseHeld=false;
+const INTERP=100;   // render 100ms in the past for smooth remote motion
+function connect(name, sp){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(proto+'://'+location.host+'/mp');
+  ws.onopen=()=>{ ws.send(JSON.stringify({t:'join',name,sp})); $('conn').textContent='connected'; };
+  ws.onclose=()=>{ connected=false; $('conn').textContent='disconnected — refresh'; };
+  ws.onerror=()=>{ $('conn').textContent='connection error'; };
+  ws.onmessage=(ev)=>{ let m; try{ m=JSON.parse(ev.data); }catch{ return; }
+    if(m.t==='welcome'){ WORLD=m.world; SEED=m.seed; seedWorld(); myId=m.id; realm=m.realm||'Phobos'; $('conn').textContent='🪐 '+realm+' · online'; }
+    else if(m.t==='s'){ onSnapshot(m); }
+    else if(m.t==='died'){ /* server respawns us; snapshot will jump */ }
+  };
+}
+function onSnapshot(m){ const now=performance.now(); serverMe=m.me;
+  if(!me){ me={x:m.me.x,y:m.me.y,vx:0,vy:0}; cam.x=m.me.x; cam.y=m.me.y; connected=true; $('ov').style.display='none'; $('card').style.display='block'; $('conn').style.display='block'; $('hint').style.display='block'; }
+  const ents=new Map();
+  for(const a of m.e){ ents.set(a[0], {nid:a[0],x:a[1],y:a[2],id:a[3],mass:a[4],face:a[5],moving:!!a[6],anim:a[7],hp:a[8],mhp:a[9],name:a[10],col:a[11]}); }
+  snaps.push({time:now, ents, food:m.f}); if(snaps.length>4) snaps.shift();
+  for(const ev of m.fx) vfx.push({fx:ev.k,x:ev.x,y:ev.y,rot:ev.r,scale:ev.sc,flip:ev.fl,color:ev.c,color2:ev.c2,t:0,dur:0.42});
+}
+let lastSend=0;
+function sendInput(now){ if(!ws||ws.readyState!==1)return; if(now-lastSend<33)return; lastSend=now;
+  ws.send(JSON.stringify({t:'in',mv:[input.x,input.y],aim:[aim.x,aim.y],a:atkQueued?1:0})); atkQueued=false; }
+
+// ---- input ----
+const keys={};
+addEventListener('keydown',e=>{ keys[e.key.toLowerCase()]=true; });
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+function readKeys(){ let x=0,y=0; if(keys['w']||keys['arrowup'])y-=1; if(keys['s']||keys['arrowdown'])y+=1; if(keys['a']||keys['arrowleft'])x-=1; if(keys['d']||keys['arrowright'])x+=1; const l=Math.hypot(x,y); if(l>1){x/=l;y/=l;} input={x,y}; }
+function aimAt(cx,cy){ if(!me)return; const wx=cam.x+(cx-VW/2)/ez(), wy=cam.y+(cy-VH/2)/ez(); const dx=wx-me.x,dy=wy-me.y,l=Math.hypot(dx,dy)||1; aim={x:dx/l,y:dy/l}; }
+CV.addEventListener('mousemove',e=>aimAt(e.clientX,e.clientY));
+CV.addEventListener('pointerdown',e=>{ aimAt(e.clientX,e.clientY); atkQueued=true; mouseHeld=true; });
+addEventListener('pointerup',()=>mouseHeld=false);
+CV.addEventListener('contextmenu',e=>e.preventDefault());
+
+// ================= CAMERA / PREDICTION / RENDER =================
+function autoZoom(){ const m=me?serverMe.m:0.02; return 2.85-Math.pow(clamp(m,0,1),0.7)*2.15; }
+let zoom=1; function ez(){ return clamp(zoom*autoZoom(),0.42,3.2); }
+let last=performance.now();
+function predict(dt){ if(!me||!serverMe)return;
+  const spd=(serverMe.bs||150)*(1-clamp(serverMe.m,0,1)*0.32);
+  me.vx+=(input.x*spd-me.vx)*Math.min(1,dt*9); me.vy+=(input.y*spd-me.vy)*Math.min(1,dt*9);
+  me.x=clamp(me.x+me.vx*dt,12,WORLD-12); me.y=clamp(me.y+me.vy*dt,12,WORLD-12);
+  const ex=serverMe.x-me.x, ey=serverMe.y-me.y, d=Math.hypot(ex,ey);
+  if(d>240){ me.x=serverMe.x; me.y=serverMe.y; } else { me.x+=ex*Math.min(1,dt*4); me.y+=ey*Math.min(1,dt*4); }   // gentle reconcile
+}
+function render(){
+  const Z=ez(), iw=Math.ceil(VW/Z), ih=Math.ceil(VH/Z);
+  if(off.width!==iw||off.height!==ih){ off.width=iw; off.height=ih; }
+  offx.setTransform(1,0,0,1,0,0); offx.imageSmoothingEnabled=false; offx.clearRect(0,0,iw,ih);
+  drawTerrain(iw,ih);
+  gx=offx; offx.save(); offx.translate(iw/2-cam.x, ih/2-cam.y);
+  // interpolated remote entities + food
+  const now=performance.now(), rt=now-INTERP; let A=null,B=null;
+  for(let i=snaps.length-1;i>=0;i--){ if(snaps[i].time<=rt){ A=snaps[i]; B=snaps[i+1]||snaps[i]; break; } }
+  if(!A&&snaps.length){ A=snaps[0]; B=snaps[0]; }
+  const draw=[];
+  if(A){ const span=Math.max(1,B.time-A.time), f=clamp((rt-A.time)/span,0,1);
+    for(const [nid,eb] of B.ents){ const ea=A.ents.get(nid)||eb; const rx=lerp(ea.x,eb.x,f), ry=lerp(ea.y,eb.y,f);
+      draw.push({rx,ry,id:eb.id,mass:eb.mass,face:eb.face,moving:eb.moving,anim:eb.anim,hp:eb.hp,mhp:eb.mhp,name:eb.name,col:eb.col,self:false}); }
+    for(const fo of (B.food||[])){ const im=imgc['/assets/_env/'+fo[2]+'.png']||img('/assets/_env/'+fo[2]+'.png'); const s=18; if(im.ok)offx.drawImage(im.img,fo[0]-s/2,fo[1]-s/2,s,s); }
+  }
+  // self
+  if(me&&serverMe){ draw.push({rx:me.x,ry:me.y,id:serverMe.sp,mass:serverMe.m,face:serverMe.fc,moving:(input.x||input.y)?true:false,anim:performance.now()/110,hp:serverMe.h,mhp:serverMe.mh,name:playerName,col:'#f5793b',self:true}); }
+  draw.sort((a,b)=>a.ry-b.ry);
+  for(const d of draw) drawCreature(d);
+  // effects
+  for(const v of vfx){ const fn=window.FXA[v.fx]; if(!fn)continue; const sc=v.scale||1, tt=clamp(v.t/v.dur,0,1); offx.save(); offx.translate(v.x,v.y); if(v.rot)offx.rotate(v.rot); offx.scale(sc*(v.flip?-1:1),sc); offx.translate(-32,-34); fn(offx,tt,{cx:32,cy:34,scale:1,dir:1,color:v.color,color2:v.color2}); offx.restore(); }
+  offx.restore(); gx=X;
+  X.clearRect(0,0,VW,VH); X.imageSmoothingEnabled=false; X.drawImage(off,0,0,iw,ih,0,0,VW,VH);
+}
+function loop(now){ const dt=Math.min(0.05,(now-last)/1000||0); last=now;
+  readKeys(); if(mouseHeld)atkQueued=true; predict(dt); sendInput(now);
+  if(me){ cam.x+=(me.x-cam.x)*Math.min(1,dt*7); cam.y+=(me.y-cam.y)*Math.min(1,dt*7); }
+  for(const v of vfx)v.t+=dt; vfx=vfx.filter(v=>v.t<v.dur);
+  if(connected){ render();
+    if(serverMe){ $('hp').style.width=clamp(serverMe.h/serverMe.mh*100,0,100)+'%'; $('pn').textContent=playerName; $('ps').textContent=(SPECIES[serverMe.sp]?SPECIES[serverMe.sp].name:'')+' · '+Math.round(serverMe.m*100)+'%'; } }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ================= START SCREEN =================
+let playerName=localStorage.getItem('cl_name')||'Crab';
+(async()=>{
+  let data; try{ data=await(await fetch('/api/species')).json(); }catch{ $('ovbox').innerHTML='<h1>offline</h1><p>server not reachable</p>'; return; }
+  const EXCLUDE=new Set(['pricklepal','dustjerbo','brinemaw']);
+  for(const sp of data.species) SPECIES[sp.id]=sp;
+  allies=data.species.filter(s=>s.faction==='friendly'&&!EXCLUDE.has(s.id)&&s.sprite).map(s=>s.id);
+  const box=$('ovbox');
+  box.innerHTML='<h1>CLAWLAND</h1><div class="subhead">· online ·</div><div class="frow"><label>Name</label><input type="text" id="in-name" maxlength="14"></div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:6px 0">choose your Claudemon</div><div id="pick"></div><button class="btn" id="go">▶ JOIN</button><div class="status" id="st"></div>';
+  $('in-name').value=playerName;
+  let sel=allies[0]; const pkw=$('pick');
+  for(const id of allies){ const sp=SPECIES[id]; const d=document.createElement('div'); d.className='pk'+(id===sel?' sel':''); d.dataset.id=id; const cv=document.createElement('canvas'); cv.width=44;cv.height=44; d.appendChild(cv); const nm=document.createElement('div'); nm.className='n'; nm.textContent=sp.name; d.appendChild(nm);
+    const sh=img('/assets/'+sp.sprite.sheet), c=cv.getContext('2d'); c.imageSmoothingEnabled=false; (function a(){ if(sh.ok){ const fr=Math.floor(performance.now()/110)%sh.n; c.clearRect(0,0,44,44); c.drawImage(sh.img,fr*sh.fw,0,sh.fw,sh.fw,0,0,44,44);} requestAnimationFrame(a); })();
+    d.onclick=()=>{ sel=id; [...pkw.children].forEach(x=>x.classList.toggle('sel',x.dataset.id===id)); }; pkw.appendChild(d); }
+  $('go').onclick=()=>{ playerName=(($('in-name').value||'Crab').trim()||'Crab').slice(0,14); try{localStorage.setItem('cl_name',playerName);}catch{} $('st').textContent='connecting…'; $('conn').style.display='block'; connect(playerName,sel); };
+})();
+</script>
+</body>
+</html>

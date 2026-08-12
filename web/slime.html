@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Meet the Slime</title>
+<style>
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:#eaf0ff;
+    font-family:"Courier New",monospace;min-height:100vh;padding:30px 16px;text-align:center;}
+  h1{letter-spacing:3px;color:#3ac0a0;font-size:22px;margin:4px;}
+  .sub{color:#8fa0cf;font-size:13px;margin-bottom:24px;}
+  .stage{background:#08122b;border:2px solid #1d2748;border-radius:16px;width:320px;height:320px;margin:0 auto;
+    display:flex;align-items:flex-end;justify-content:center;position:relative;overflow:hidden;}
+  .floor{position:absolute;bottom:0;left:0;right:0;height:18px;background:#241b3a;}
+  .stage img{width:220px;height:220px;image-rendering:pixelated;position:relative;z-index:2;margin-bottom:26px;
+    animation:squish 1.6s ease-in-out infinite;}
+  @keyframes squish{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-10px) scale(1.04,0.96)}}
+</style></head>
+<body>
+  <h1>🟢 THE SLIME</h1>
+  <div class="sub">Clawde's chunky little friend · same simple style</div>
+  <div class="stage"><div class="floor"></div><img src="/assets/_concepts/slime_trad.png?v=1"></div>
+</body></html>

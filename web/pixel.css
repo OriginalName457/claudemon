@@ -1,0 +1,45 @@
+/* Claudemon shared PIXEL theme — real bitmap fonts + chunky pixel UI bits.
+   Linked first on every page; page CSS layers specifics on top. */
+@font-face { font-family:'PressStart'; src:url('/assets/fonts/PressStart2P.ttf') format('truetype'); font-display:swap; }
+@font-face { font-family:'Silk'; src:url('/assets/fonts/Silkscreen.ttf') format('truetype'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Silk'; src:url('/assets/fonts/SilkscreenBold.ttf') format('truetype'); font-weight:700; font-display:swap; }
+
+:root{
+  --pink:#ff5d8f; --edge:#0a0a16;
+  --font-body:'Silk','Courier New',monospace;
+  --font-title:'PressStart','Silk',monospace;
+}
+/* crisp everywhere */
+html{ image-rendering:pixelated; }
+body{ font-family:var(--font-body); -webkit-font-smoothing:none; text-rendering:optimizeSpeed; letter-spacing:.5px; }
+img,canvas{ image-rendering:pixelated; }
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-thumb{ background:#3a3f66; border:2px solid var(--edge); }
+::-webkit-scrollbar-track{ background:#12142a; }
+
+/* pixel title text */
+.ptitle{ font-family:var(--font-title); line-height:1.35; }
+
+/* pixel nav tabs (shared look; per-page sets colors via --nav-on) */
+.pnav{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+.pnav a{
+  font-family:var(--font-body); font-weight:700; font-size:12px; text-decoration:none;
+  color:var(--dim,#8a88bf); background:var(--panel,#1a1c34);
+  padding:7px 11px; border:3px solid var(--edge); box-shadow:3px 3px 0 var(--edge);
+  image-rendering:pixelated;
+}
+.pnav a:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--edge); }
+.pnav a.on{ color:#fff; background:var(--nav-on,#2a7d4f); }
+
+/* pixel button: hard border + hard drop-shadow, presses down */
+.pbtn{
+  font-family:var(--font-body); font-weight:700; cursor:pointer;
+  color:#fff; background:var(--nav-on,#2a7d4f);
+  border:3px solid var(--edge); box-shadow:3px 3px 0 var(--edge);
+  padding:9px 13px; image-rendering:pixelated;
+}
+.pbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--edge); }
+.pbtn:disabled{ opacity:.5; cursor:default; box-shadow:3px 3px 0 var(--edge); transform:none; }
+
+/* pixel panel: square, thick border, hard shadow */
+.ppanel{ background:var(--panel,#1a1c34); border:3px solid var(--edge); box-shadow:4px 4px 0 var(--edge); }

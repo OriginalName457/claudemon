@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Scratch Editor · Clawland</title>
+<style>
+  :root{ --ink:#f0e6d8; --accent:#f5793b; --edge:#c25e2a; --dim:#a5917c; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#100e0b; color:var(--ink); font:14px/1.5 ui-monospace,'Courier New',monospace; padding:20px; }
+  .wrap{ max-width:760px; margin:0 auto; }
+  h1{ font-size:20px; letter-spacing:1px; margin:0 0 4px; }
+  .sub{ color:var(--dim); font-size:13px; margin:0 0 16px; max-width:70ch; }
+  .row{ display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  #edit{ image-rendering:pixelated; border:2px solid #2c2620; border-radius:10px; background:radial-gradient(circle at 50% 46%,#241d16,#0c0a08 74%); cursor:crosshair; touch-action:none; }
+  .panel{ background:#191510; border:1px solid #2c2620; border-radius:10px; padding:12px 14px; min-width:220px; }
+  .panel h3{ margin:0 0 8px; font-size:12px; color:#8fd08a; letter-spacing:1px; text-transform:uppercase; }
+  .btn{ font-family:inherit; font-weight:700; font-size:13px; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); border-radius:8px; padding:8px 12px; cursor:pointer; margin:0 6px 8px 0; }
+  .btn:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+  .btn.ghost{ background:#20241f; border-color:#3a4a3e; box-shadow:2px 2px 0 #3a4a3e; }
+  .leg{ font-size:12px; color:var(--dim); line-height:1.9; margin-top:8px; }
+  .sw{ display:inline-block; width:11px; height:11px; border-radius:50%; vertical-align:-1px; margin-right:5px; }
+  .status{ font-size:12px; color:#8fe06a; min-height:16px; margin-top:6px; }
+  label.rng{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--dim); margin-top:8px; }
+  input[type=range]{ flex:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✏️ Scratch Editor</h1>
+  <p class="sub">Drag the <b style="color:#ffd23f">endpoints</b> to position each claw mark, and the <b style="color:#6cb8ff">◆ control dot</b> to bend it. It plays live. <b>Save</b> to use it in Clawland (the game reads it automatically). This edits the mark shape at rest-facing; in play it mirrors L/R and scales with the creature.</p>
+  <div class="row">
+    <canvas id="edit" width="448" height="448" style="width:448px;height:448px"></canvas>
+    <div class="panel">
+      <h3>marks</h3>
+      <button class="btn" id="save">💾 Save to game</button>
+      <button class="btn ghost" id="add">＋ mark</button>
+      <button class="btn ghost" id="del">－ selected</button>
+      <button class="btn ghost" id="reset">↺ reset</button>
+      <label class="rng">speed <input type="range" id="spd" min="0.4" max="2" step="0.05" value="1"></label>
+      <div class="leg">
+        <div><span class="sw" style="background:#ffd23f"></span>endpoint (drag)</div>
+        <div><span class="sw" style="background:#6cb8ff"></span>curve handle (drag)</div>
+        <div><span class="sw" style="background:#f5793b"></span>selected mark</div>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+</div>
+<script src="/fx-attacks.js"></script>
+<script>
+'use strict';
+const CV=document.getElementById('edit'), X=CV.getContext('2d'); X.imageSmoothingEnabled=false;
+const $=(id)=>document.getElementById(id);
+const SC=7, CX=32, CY=34;                 // 64-space, scaled 7x; center of the effect
+const DEFAULT=[{ax:14,ay:-19,bx:-12,by:15,cv:6},{ax:19,ay:-15,bx:-7,by:18,cv:6},{ax:9,ay:-21,bx:-16,by:12,cv:7}];
+let marks; try{ const s=JSON.parse(localStorage.getItem('cl_slash')); marks=(Array.isArray(s)&&s.length)?s:JSON.parse(JSON.stringify(DEFAULT)); }catch{ marks=JSON.parse(JSON.stringify(DEFAULT)); }
+let sel=0, spd=1, drag=null;
+function apply(){ window.SLASH_CFG=marks; }
+apply();
+// world(64)->screen
+const sx=(x)=>x*SC, sy=(y)=>y*SC, wx=(px)=>px/SC, wy=(py)=>py/SC;
+function ctrlPt(m){ const ax=CX+m.ax,ay=CY+m.ay,bx=CX+m.bx,by=CY+m.by; const px=-(by-ay),py=(bx-ax),pl=Math.hypot(px,py)||1; return {x:(ax+bx)/2+px/pl*m.cv, y:(ay+by)/2+py/pl*m.cv}; }
+function setCtrl(m,wxp,wyp){ const ax=CX+m.ax,ay=CY+m.ay,bx=CX+m.bx,by=CY+m.by; const px=-(by-ay),py=(bx-ax),pl=Math.hypot(px,py)||1; const mx=(ax+bx)/2,my=(ay+by)/2; m.cv=((wxp-mx)*px+(wyp-my)*py)/pl; }
+function handles(){ const hs=[]; marks.forEach((m,i)=>{ hs.push({i,t:'a',x:CX+m.ax,y:CY+m.ay}); hs.push({i,t:'b',x:CX+m.bx,y:CY+m.by}); const c=ctrlPt(m); hs.push({i,t:'c',x:c.x,y:c.y}); }); return hs; }
+CV.addEventListener('pointerdown',e=>{ const r=CV.getBoundingClientRect(); const mx=wx((e.clientX-r.left)), my=wy((e.clientY-r.top));
+  let best=null,bd=3.5; for(const h of handles()){ const d=Math.hypot(h.x-mx,h.y-my); if(d<bd){bd=d;best=h;} } if(best){ drag=best; sel=best.i; } });
+addEventListener('pointermove',e=>{ if(!drag)return; const r=CV.getBoundingClientRect(); const mx=wx((e.clientX-r.left)), my=wy((e.clientY-r.top)); const m=marks[drag.i];
+  if(drag.t==='a'){ m.ax=mx-CX; m.ay=my-CY; } else if(drag.t==='b'){ m.bx=mx-CX; m.by=my-CY; } else setCtrl(m,mx,my); apply(); });
+addEventListener('pointerup',()=>drag=null);
+$('save').onclick=()=>{ localStorage.setItem('cl_slash',JSON.stringify(marks)); $('status').textContent='saved ✓ — reload Clawland to see it'; setTimeout(()=>$('status').textContent='',2500); };
+$('reset').onclick=()=>{ marks=JSON.parse(JSON.stringify(DEFAULT)); sel=0; apply(); };
+$('add').onclick=()=>{ marks.push({ax:12,ay:-16,bx:-12,by:16,cv:5}); sel=marks.length-1; apply(); };
+$('del').onclick=()=>{ if(marks.length>1){ marks.splice(sel,1); sel=Math.max(0,sel-1); apply(); } };
+$('spd').oninput=e=>spd=+e.target.value;
+let t0=performance.now();
+function loop(now){ const t=(((now-t0)*0.001*spd)%1.1)/1.1; X.clearRect(0,0,CV.width,CV.height);
+  // grid + center
+  X.strokeStyle='#20242a'; X.lineWidth=1; for(let g=0;g<=64;g+=8){ X.beginPath(); X.moveTo(sx(g),0); X.lineTo(sx(g),448); X.moveTo(0,sy(g)); X.lineTo(448,sy(g)); X.stroke(); }
+  X.strokeStyle='#3a4a3e'; X.beginPath(); X.moveTo(sx(CX),0); X.lineTo(sx(CX),448); X.moveTo(0,sy(CY)); X.lineTo(448,sy(CY)); X.stroke();
+  // the live slash, scaled up
+  X.save(); X.scale(SC,SC); X.imageSmoothingEnabled=false; window.FXA.slash(X, t, {cx:CX,cy:CY,scale:1,dir:1,color:'#ffffff',color2:'#ff6b6b'}); X.restore();
+  // handles
+  marks.forEach((m,i)=>{ const A={x:sx(CX+m.ax),y:sy(CY+m.ay)}, B={x:sx(CX+m.bx),y:sy(CY+m.by)}, c=ctrlPt(m), C={x:sx(c.x),y:sy(c.y)};
+    X.strokeStyle=i===sel?'#f5793b':'#5a5048'; X.lineWidth=1.5; X.setLineDash([4,4]); X.beginPath(); X.moveTo(A.x,A.y); X.lineTo(C.x,C.y); X.lineTo(B.x,B.y); X.stroke(); X.setLineDash([]);
+    for(const P of [A,B]){ X.fillStyle='#ffd23f'; X.beginPath(); X.arc(P.x,P.y,5,0,7); X.fill(); X.strokeStyle='#7a5a12'; X.stroke(); }
+    X.fillStyle='#6cb8ff'; X.save(); X.translate(C.x,C.y); X.rotate(Math.PI/4); X.fillRect(-4,-4,8,8); X.restore();
+  });
+  requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

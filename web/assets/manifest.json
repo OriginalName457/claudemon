@@ -1,0 +1,12 @@
+{
+  "creature": {
+    "name": "Clawde",
+    "biome": "aquatic",
+    "default": "idle",
+    "states": {
+      "idle": { "sheet": "clawde.png", "frameW": 48, "frameH": 48, "fps": 8, "frames": 9, "scale": 2.2, "smooth": false },
+      "hungry": { "sheet": "clawde_hungry.png", "frameW": 48, "frameH": 48, "fps": 1, "frames": 1, "scale": 2.2, "smooth": false },
+      "sleepy": { "sheet": "clawde_sleepy.png", "frameW": 48, "frameH": 48, "fps": 1, "frames": 1, "scale": 2.2, "smooth": false }
+    }
+  }
+}

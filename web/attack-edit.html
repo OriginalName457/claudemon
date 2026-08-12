@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Attack Editor · Clawland</title>
+<style>
+  :root{ --ink:#f0e6d8; --dim:#a5917c; --accent:#f5793b; --edge:#c25e2a; --panel:#191510; --line:#2c2620; --left:#6cb8ff; --right:#f5793b; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#100e0b; color:var(--ink); font:14px/1.55 ui-monospace,'Courier New',monospace; padding:22px; }
+  .wrap{ max-width:900px; margin:0 auto; }
+  h1{ font-size:22px; letter-spacing:1px; margin:0 0 4px; }
+  h2{ font-size:14px; letter-spacing:1px; color:#8fd08a; text-transform:uppercase; margin:26px 0 10px; border-bottom:1px solid var(--line); padding-bottom:6px; }
+  .sub{ color:var(--dim); font-size:13px; margin:0 0 6px; max-width:78ch; }
+  a{ color:var(--accent); }
+  .row{ display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  #stage{ image-rendering:pixelated; border:2px solid var(--line); border-radius:12px; background:radial-gradient(circle at 50% 50%,#241d16,#0c0a08 76%); cursor:grab; touch-action:none; }
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; min-width:230px; }
+  .panel h3{ margin:0 0 8px; font-size:12px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; }
+  .btn{ font-family:inherit; font-weight:700; font-size:13px; color:#fff; background:var(--accent); border:3px solid var(--edge); box-shadow:2px 2px 0 var(--edge); border-radius:8px; padding:8px 12px; cursor:pointer; margin:0 6px 8px 0; }
+  .btn:active{ transform:translate(2px,2px); box-shadow:0 0 0; }
+  .btn.ghost{ background:#20241f; border-color:#3a4a3e; box-shadow:2px 2px 0 #3a4a3e; }
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tab{ font-family:inherit; font-size:12px; font-weight:700; color:var(--dim); background:#181410; border:2px solid var(--line); border-radius:7px; padding:6px 11px; cursor:pointer; }
+  .tab.on{ color:#fff; background:var(--accent); border-color:var(--edge); }
+  .fld{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--dim); margin:6px 0; }
+  .fld b{ width:44px; }
+  input[type=range]{ flex:1; }
+  select{ font-family:inherit; font-size:12px; background:#181410; color:var(--ink); border:2px solid var(--line); border-radius:6px; padding:4px 6px; }
+  .sw{ display:inline-block; width:11px; height:11px; border-radius:50%; vertical-align:-1px; margin-right:5px; }
+  .status{ font-size:12px; color:#8fe06a; min-height:16px; margin-top:6px; }
+  .dirgrid{ display:grid; grid-template-columns:repeat(3,minmax(0,210px)); grid-auto-rows:auto; gap:8px; justify-content:center; margin:8px auto; }
+  .dirpanel{ background:#141009; border:1px solid var(--line); border-radius:11px; padding:6px 6px 8px; }
+  .dirpanel.up{ grid-column:2; grid-row:1; } .dirpanel.left{ grid-column:1; grid-row:2; } .dirpanel.right{ grid-column:3; grid-row:2; } .dirpanel.down{ grid-column:2; grid-row:3; }
+  .dlabel{ font-size:12px; font-weight:700; color:var(--accent); text-align:center; margin-bottom:3px; letter-spacing:2px; }
+  .dcanvas{ width:100%; display:block; image-rendering:pixelated; border-radius:8px; background:radial-gradient(circle at 50% 55%,#241d16,#0c0a08 74%); cursor:grab; touch-action:none; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(262px,1fr)); gap:8px; }
+  .cre{ display:flex; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:7px 9px; }
+  .cre img{ width:34px; height:34px; image-rendering:pixelated; flex:none; }
+  .cre .nm{ flex:1; font-size:12px; min-width:0; }
+  .cre small{ display:block; color:var(--dim); font-size:10px; }
+  .cre .sels{ display:flex; flex-direction:column; gap:4px; flex:none; }
+  .cre .sels label{ display:flex; align-items:center; gap:5px; }
+  .cre .sels i{ font-style:normal; color:var(--dim); font-size:9px; width:20px; text-align:right; }
+  .cre .sels select{ width:112px; }
+  .cre.changed{ border-color:var(--accent); }
+  .foot{ display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚔️ Attack Editor</h1>
+  <p class="sub">Position where each attack lands around your Claudemon <b>for every aim direction</b>, and assign which move each creature uses. Saved to your browser; <b>Clawland reads it on load</b> (reload the game after saving). Also: <a href="/fx-edit.html">Scratch shape editor</a> · <a href="/clawland.html">Play Clawland</a></p>
+
+  <h2>① Where attacks land · up / down / left / right</h2>
+  <p class="sub">Each direction has a <b style="color:var(--left)">L</b> and <b style="color:var(--right)">R</b> swing — drag each to place it, and its small <b>handle</b> to spin. In-game the two alternate every hit (used by slash, hook &amp; pincher alike). Diagonal aims blend the two nearest; auto-scaled to size. Tabs pick which move you're previewing: <b style="color:var(--accent)" id="curatk">slash</b></p>
+  <div class="tabs" id="tabs"></div>
+  <div class="fld" style="max-width:290px;margin:8px 0"><b>preview</b><select id="prev"></select></div>
+  <div class="dirgrid">
+    <div class="dirpanel up"><div class="dlabel">↑ UP</div><canvas class="dcanvas" data-d="up" width="200" height="200"></canvas></div>
+    <div class="dirpanel left"><div class="dlabel">← LEFT</div><canvas class="dcanvas" data-d="left" width="200" height="200"></canvas></div>
+    <div class="dirpanel right"><div class="dlabel">→ RIGHT</div><canvas class="dcanvas" data-d="right" width="200" height="200"></canvas></div>
+    <div class="dirpanel down"><div class="dlabel">↓ DOWN</div><canvas class="dcanvas" data-d="down" width="200" height="200"></canvas></div>
+  </div>
+  <div class="foot"><button class="btn" id="saveP">💾 Save</button><button class="btn ghost" id="resetP">↺ reset</button><span class="status" id="statP"></span></div>
+
+  <h2>② Each Claudemon's abilities</h2>
+  <p class="sub"><b>atk</b> = the melee move (left-click). <b>2nd</b> = the secondary/special (right-click) — leave on <i>· default ·</i> to keep its biome move. These are what I assigned; change any you like. <span style="color:var(--accent)">Orange border</span> = you changed it.</p>
+  <div class="grid" id="creGrid"></div>
+  <div class="foot">
+    <button class="btn" id="saveA">💾 Save abilities</button>
+    <button class="btn ghost" id="resetA">↺ reset all to defaults</button>
+    <span class="status" id="statA"></span>
+  </div>
+</div>
+
+<script src="/fx-attacks.js"></script>
+<script>
+'use strict';
+const $=(id)=>document.getElementById(id);
+const ATKS=[['slash','Slash / Claw','#ffffff','#ff6b6b'],['hook','Hook','#ffffff','#ffd7c0'],['pinch','Pincher','#ffffff','#ff6b6b'],['bite','Bite','#ffffff','#ffd27a'],['bash','Bash','#ffffff','#cfd7ff']];
+const SEC_OPTS=[['','· default ·'],['bolt','Bolt (ranged)'],['spike','Spike (ranged)'],['ember','Ember (ranged)'],['splash','Splash (aoe)'],['poison','Spores (aoe)'],['shock','Zap (nova)']];
+const DEF_MELEE={ clawde:'pinch',sting:'pinch', fennette:'slash',mantleaf:'slash',spikelet:'slash',mosskit:'slash',glowbug:'slash', dunepup:'hook',huskcrawler:'hook',prickuff:'hook', gulpeel:'bite',mirageling:'bite',capshroom:'bite',chompsprout:'bite',slime:'bite',thornmaw:'bite',axoloom:'bite' };
+
+// ---- state: ONE shared set of 4 per-direction placements (up/down/left/right); each dir has a LEFT & RIGHT swing. saved as [right,down,left,up] ----
+function normDeg(d){ d=((d+180)%360+360)%360-180; return Math.round(d); }
+function defDir(deg){ const th=deg*Math.PI/180, up=Math.max(0,-Math.sin(th)), c=Math.cos(th), s=Math.sin(th);   // two swings split to either side of the aim, up lifted above the head
+  return { L:{x:Math.round(24*c+9*s), y:Math.round(24*s-9*c-33*up), rot:normDeg(deg-20)},
+           R:{x:Math.round(24*c-9*s), y:Math.round(24*s+9*c-33*up), rot:normDeg(deg+20)} }; }
+function defDirs(){ return { right:defDir(0), down:defDir(90), left:defDir(180), up:defDir(-90) }; }
+function toLR(e){ if(e&&e.L&&e.R)return {L:{x:+e.L.x,y:+e.L.y,rot:+e.L.rot},R:{x:+e.R.x,y:+e.R.y,rot:+e.R.rot}}; if(e&&'x'in e){ const o={x:+e.x,y:+e.y,rot:+e.rot}; return {L:{...o},R:{...o}}; } return null; }
+function loadDirs(){ try{ const a=JSON.parse(localStorage.getItem('cl_angles')); if(Array.isArray(a)&&a.length===4){ const [r,d,l,u]=a.map(toLR); if(r&&d&&l&&u) return {right:r,down:d,left:l,up:u}; } }catch{} return defDirs(); }
+let DIRS=loadDirs();
+let MEL={}; try{ const m=JSON.parse(localStorage.getItem('cl_melee')); if(m&&typeof m==='object')MEL=m; }catch{}
+let SEC={}; try{ const s=JSON.parse(localStorage.getItem('cl_secondary')); if(s&&typeof s==='object')SEC=s; }catch{}
+let cur='slash';
+
+const PANELS=['up','left','right','down'];
+const SCp=1.9;                                       // 200px panel; character offset OPPOSITE the panel's direction so the attack has room
+const PC={ up:{x:100,y:150}, down:{x:100,y:52}, left:{x:152,y:100}, right:{x:48,y:100} };
+const w2s=(d,x,y)=>({x:PC[d].x+x*SCp, y:PC[d].y+y*SCp});
+const s2w=(d,sx,sy)=>({x:(sx-PC[d].x)/SCp, y:(sy-PC[d].y)/SCp});
+let sprite=null, prevId='clawde', drag=null;
+const spriteCache={};
+function loadSprite(id){ if(spriteCache[id]){ sprite=spriteCache[id]; return; } const im=new Image(); im.onload=()=>{ spriteCache[id]=im; if(prevId===id)sprite=im; }; im.src='/assets/'+id+'.png'; }
+
+// ---- tabs ----
+const tabsEl=$('tabs');
+ATKS.forEach(([id,label])=>{ const b=document.createElement('button'); b.className='tab'+(id===cur?' on':''); b.textContent=label; b.onclick=()=>{ cur=id; [...tabsEl.children].forEach((c,i)=>c.classList.toggle('on',ATKS[i][0]===cur)); $('curatk').textContent=id; }; tabsEl.appendChild(b); });
+
+// ---- 4 panels: drag the marker (move) or its handle (spin) ----
+const ctxs={};
+function evToCanvas(e,cv){ const r=cv.getBoundingClientRect(); return { x:(e.clientX-r.left)*(cv.width/r.width), y:(e.clientY-r.top)*(cv.height/r.height) }; }
+document.querySelectorAll('.dcanvas').forEach(cv=>{ const d=cv.dataset.d; ctxs[d]=cv.getContext('2d'); ctxs[d].imageSmoothingEnabled=false;
+  cv.addEventListener('pointerdown',e=>{ const m=evToCanvas(e,cv), dd=DIRS[d]; let best=null,bd=1e9;
+    for(const side of ['L','R']){ const g=dd[side], c=w2s(d,g.x,g.y), h={x:c.x+Math.cos(g.rot*Math.PI/180)*18,y:c.y+Math.sin(g.rot*Math.PI/180)*18};
+      if(Math.hypot(h.x-m.x,h.y-m.y)<10){ best={d,cv,side,rot:true}; break; } const db=Math.hypot(c.x-m.x,c.y-m.y); if(db<bd&&db<16){ bd=db; best={d,cv,side}; } }
+    if(best){ drag=best; cv.style.cursor='grabbing'; } }); });
+addEventListener('pointermove',e=>{ if(!drag)return; const m=evToCanvas(e,drag.cv), o=DIRS[drag.d][drag.side];
+  if(drag.rot){ const c=w2s(drag.d,o.x,o.y); o.rot=Math.round(Math.atan2(m.y-c.y,m.x-c.x)*180/Math.PI/5)*5; }
+  else { const wp=s2w(drag.d,m.x,m.y); o.x=Math.max(-60,Math.min(60,Math.round(wp.x))); o.y=Math.max(-70,Math.min(60,Math.round(wp.y))); } });
+addEventListener('pointerup',()=>{ if(drag)drag.cv.style.cursor='grab'; drag=null; });
+$('resetP').onclick=()=>{ DIRS=defDirs(); };
+$('saveP').onclick=()=>{ localStorage.setItem('cl_angles',JSON.stringify([DIRS.right,DIRS.down,DIRS.left,DIRS.up])); flash('statP','saved ✓ — reload Clawland'); };
+
+function flash(id,msg){ $(id).textContent=msg; setTimeout(()=>{ if($(id).textContent===msg)$(id).textContent=''; },2600); }
+
+// ---- render loop (draws all 4 panels) ----
+let t0=performance.now();
+function loop(now){ const t=(((now-t0)*0.001)%1.15)/1.15;
+  for(const d of PANELS){ const X=ctxs[d]; if(!X)continue; const P=PC[d]; X.clearRect(0,0,200,200);
+    X.strokeStyle='#241f19'; X.lineWidth=1; for(let rr=22;rr<=92;rr+=22){ X.beginPath(); X.arc(P.x,P.y,rr,0,7); X.stroke(); }
+    X.strokeStyle='#4a5866'; X.setLineDash([4,4]); X.beginPath(); X.arc(P.x,P.y,24*SCp,0,7); X.stroke(); X.setLineDash([]);
+    if(sprite){ const fw=48,s=1.05,dw=fw*s,dh=fw*s; X.imageSmoothingEnabled=false; X.drawImage(sprite,0,0,fw,fw,P.x-dw/2,P.y-dh*0.62,dw,dh); }
+    else { X.fillStyle='#3a3128'; X.beginPath(); X.arc(P.x,P.y,12,0,7); X.fill(); }
+    const dd=DIRS[d], meta=ATKS.find(a=>a[0]===cur), fn=window.FXA[cur];
+    for(const [side,col,flip] of [['R','#f5793b',false],['L','#6cb8ff',true]]){   // R normal, L mirrored (like the two swings in-game)
+      const g=dd[side], c=w2s(d,g.x,g.y);
+      if(fn){ X.save(); X.translate(c.x,c.y); X.rotate(g.rot*Math.PI/180); X.scale(1.05*(flip?-1:1),1.05); X.translate(-32,-34); X.imageSmoothingEnabled=false; fn(X,t,{cx:32,cy:34,scale:1,dir:1,color:meta[2],color2:meta[3]}); X.restore(); }
+      const h={x:c.x+Math.cos(g.rot*Math.PI/180)*18,y:c.y+Math.sin(g.rot*Math.PI/180)*18};
+      X.strokeStyle=col; X.lineWidth=1.5; X.setLineDash([3,3]); X.beginPath(); X.moveTo(c.x,c.y); X.lineTo(h.x,h.y); X.stroke(); X.setLineDash([]);
+      X.fillStyle=col; X.globalAlpha=.24; X.beginPath(); X.arc(c.x,c.y,11,0,7); X.fill(); X.globalAlpha=1; X.beginPath(); X.arc(c.x,c.y,11,0,7); X.stroke();
+      X.fillStyle=col; X.font='bold 10px monospace'; X.textAlign='center'; X.textBaseline='middle'; X.fillText(side,c.x,c.y); X.textAlign='left'; X.textBaseline='alphabetic';
+      X.fillStyle='#100e0b'; X.beginPath(); X.arc(h.x,h.y,4,0,7); X.fill(); X.strokeStyle=col; X.beginPath(); X.arc(h.x,h.y,4,0,7); X.stroke(); }
+  }
+  requestAnimationFrame(loop); }
+
+// ---- abilities grid ----
+function melOf(id){ return MEL[id]||DEF_MELEE[id]||'bash'; }
+async function buildGrid(){ let data; try{ data=await(await fetch('/api/species')).json(); }catch{ $('creGrid').innerHTML='<span class="sub">start the Claudemon server + reload</span>'; return; }
+  const EXCLUDE=new Set(['pricklepal','dustjerbo','brinemaw']);
+  const list=data.species.filter(s=>s.sprite&&!EXCLUDE.has(s.id)).sort((a,b)=>(a.faction>b.faction?1:-1)||a.name.localeCompare(b.name));
+  const g=$('creGrid'); g.innerHTML='';
+  for(const sp of list){ const cur0=melOf(sp.id); const card=document.createElement('div'); const mark=()=>card.classList.toggle('changed',!!MEL[sp.id]||!!SEC[sp.id]); card.className='cre';
+    const im=document.createElement('img'); im.src='/assets/'+sp.sprite.sheet; im.style.objectFit='none'; im.style.objectPosition='0 0'; im.title=sp.id;
+    const nm=document.createElement('div'); nm.className='nm'; nm.innerHTML=(sp.emoji||'')+' '+sp.name+'<small>'+sp.faction+'</small>';
+    const sels=document.createElement('div'); sels.className='sels';
+    const la=document.createElement('label'); la.innerHTML='<i>atk</i>'; const sel=document.createElement('select'); for(const [aid,lab] of ATKS){ const op=document.createElement('option'); op.value=aid; op.textContent=lab; if(aid===cur0)op.selected=true; sel.appendChild(op); }
+    sel.onchange=()=>{ if(sel.value===(DEF_MELEE[sp.id]||'bash')) delete MEL[sp.id]; else MEL[sp.id]=sel.value; mark(); }; la.appendChild(sel);
+    const lb=document.createElement('label'); lb.innerHTML='<i>2nd</i>'; const sel2=document.createElement('select'); for(const [sid,lab] of SEC_OPTS){ const op=document.createElement('option'); op.value=sid; op.textContent=lab; if(sid===(SEC[sp.id]||''))op.selected=true; sel2.appendChild(op); }
+    sel2.onchange=()=>{ if(sel2.value==='') delete SEC[sp.id]; else SEC[sp.id]=sel2.value; mark(); }; lb.appendChild(sel2);
+    sels.append(la,lb); card.append(im,nm,sels); mark(); g.appendChild(card); }
+}
+$('saveA').onclick=()=>{ localStorage.setItem('cl_melee',JSON.stringify(MEL)); localStorage.setItem('cl_secondary',JSON.stringify(SEC)); flash('statA','saved ✓ — reload Clawland'); };
+$('resetA').onclick=()=>{ MEL={}; SEC={}; localStorage.removeItem('cl_melee'); localStorage.removeItem('cl_secondary'); buildGrid(); flash('statA','reset to defaults'); };
+
+// ---- preview creature select ----
+async function buildPrev(){ let data; try{ data=await(await fetch('/api/species')).json(); }catch{ return; }
+  const EXCLUDE=new Set(['pricklepal','dustjerbo','brinemaw']); const sel=$('prev');
+  data.species.filter(s=>s.sprite&&!EXCLUDE.has(s.id)).sort((a,b)=>a.name.localeCompare(b.name)).forEach(sp=>{ const op=document.createElement('option'); op.value=sp.id; op.textContent=(sp.emoji||'')+' '+sp.name; if(sp.id==='clawde')op.selected=true; sel.appendChild(op); });
+  sel.onchange=()=>{ prevId=sel.value; loadSprite(prevId); };
+}
+
+loadSprite('clawde'); buildGrid(); buildPrev(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

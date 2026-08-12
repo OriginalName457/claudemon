@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Claudemon — Quality Upgrade</title>
+<style>
+  body{margin:0;background:radial-gradient(120% 100% at 50% 0%,#14213f,#0a1226 70%);color:#eaf0ff;
+    font-family:"Courier New",monospace;min-height:100vh;padding:24px 16px 50px;}
+  h1{text-align:center;letter-spacing:3px;color:#3ac0a0;margin:4px 0;font-size:23px;}
+  .sub{text-align:center;color:#8fa0cf;font-size:13px;margin-bottom:26px;}
+  .grid{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;max-width:1050px;margin:0 auto;}
+  .card{background:linear-gradient(180deg,#131a36,#0e1430);border:2px solid #26305a;border-bottom-width:5px;
+    border-radius:16px;padding:16px;width:300px;text-align:center;}
+  .card h2{margin:0 0 2px;font-size:15px;}
+  .tag{font-size:10px;letter-spacing:1px;padding:3px 9px;border-radius:10px;display:inline-block;margin-bottom:12px;}
+  .bad{background:#2a1212;color:#e5776b;} .good{background:#0e2a1c;color:#56d364;} .neutral{background:#1c2340;color:#8fa0cf;}
+  .stage{height:250px;display:flex;align-items:center;justify-content:center;background:#08122b;
+    border:2px solid #1d2748;border-radius:10px;}
+  .stage img{max-width:220px;max-height:230px;}
+  .pix{image-rendering:pixelated;}
+  .note{font-size:11px;color:#8fa0cf;line-height:1.5;margin-top:12px;min-height:52px;}
+  .verdict{max-width:940px;margin:26px auto 0;text-align:center;color:#c7d0f0;font-size:13px;line-height:1.6;
+    background:#131a36;border:1px solid #26305a;border-radius:12px;padding:16px;}
+</style>
+</head>
+<body>
+  <h1>CHARACTER QUALITY — FIXED</h1>
+  <div class="sub">bitforge + your Recraft Clawde as a style reference · detailed, clean, consistent</div>
+  <div class="grid">
+    <div class="card">
+      <h2>❌ First PixelLab try</h2>
+      <div><span class="tag bad">DOUBLED · LOW DETAIL</span></div>
+      <div class="stage"><img class="pix" src="/assets/_pixellab/clawde/south.png?v=2"></div>
+      <div class="note">The <b>"reflection"</b> — the mannequin endpoint stacked two copies, and detail was crude ~40px.</div>
+    </div>
+    <div class="card" style="border-color:#3ac0a0;">
+      <h2>✅ bitforge + style reference</h2>
+      <div><span class="tag good">DETAILED · CLEAN · MATCHES</span></div>
+      <div class="stage"><img class="pix" src="/assets/_pixellab/clawde_bitforge/clawde.png?v=1"></div>
+      <div class="note">Single clean sprite, 128px, real shading + expressive face + tail. Locked to the look you loved. This is the new direction.</div>
+    </div>
+    <div class="card">
+      <h2>✨ Recraft original</h2>
+      <div><span class="tag neutral">THE LOOK WE MATCHED</span></div>
+      <div class="stage"><img src="/assets/clawde.png?v=2"></div>
+      <div class="note">The one you loved — used as the style anchor so the whole PixelLab line inherits this vibe.</div>
+    </div>
+  </div>
+  <div class="verdict">
+    <b>Detail + reflection: solved.</b> bitforge with your Clawde as <code>style_image</code> gives detailed, clean, consistent sprites.<br>
+    Remaining trade-off is <b>animation</b>: PixelLab's frame animation runs at 64px, so true walk cycles are lower-detail than these 128px stills.
+    Options next: keep these <b>detailed stills + smooth procedural motion</b>, or add real <b>64px walk frames</b> too.
+  </div>
+</body>
+</html>

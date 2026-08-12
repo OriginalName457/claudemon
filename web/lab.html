@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style id="cb-boot">html{background:#e6d2b6}body{visibility:hidden}</style>
+  <title>Claudemon — Research Lab</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%A7%AA%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{--bg:#04070f;--panel:#0a1526;--panel2:#0c1b30;--ink:#dff2ff;--dim:#6f88b0;--cyan:#35e0ff;--teal:#3ce0b8;--gold:#ffd23f;--line:#16324e;--bad:#ff5a63;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(130% 90% at 50% 0%,#0a1c33,#04070f 70%);color:var(--ink);
+      font-family:"Courier New",monospace;min-height:100vh;}
+    /* faint scanlines for the sci-fi console feel */
+    body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+      background:repeating-linear-gradient(0deg,rgba(0,0,0,0.10) 0 1px,transparent 1px 3px);opacity:.5;}
+    header{padding:12px 16px 8px;text-align:center;}
+    h1{margin:2px;letter-spacing:6px;color:var(--cyan);font-size:20px;text-shadow:0 0 8px rgba(53,224,255,.6);}
+    nav{display:flex;gap:8px;justify-content:center;margin-top:8px;}
+    nav a{font-size:12px;color:var(--dim);text-decoration:none;padding:4px 12px;border:1px solid var(--line);border-radius:12px;}
+    nav a.on{color:var(--cyan);border-color:var(--cyan);background:#062033;box-shadow:0 0 10px rgba(53,224,255,.25);}
+    #app{max-width:620px;margin:0 auto;padding:8px 14px 30px;}
+    /* hero scene banner */
+    #hero-wrap{position:relative;border:2px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:12px;
+      box-shadow:0 0 18px rgba(53,224,255,.15),inset 0 0 30px rgba(0,0,0,.4);}
+    #hero{display:block;width:100%;height:auto;image-rendering:pixelated;background:#04070f;}
+    #herocap{position:absolute;left:12px;bottom:10px;right:12px;display:flex;align-items:flex-end;gap:10px;
+      text-shadow:0 2px 4px #000;pointer-events:none;}
+    #herocap .who{font-size:16px;font-weight:bold;color:#eaffff;letter-spacing:1px;}
+    #herocap .sub{font-size:11px;color:var(--cyan);}
+    #herocap .pts{margin-left:auto;text-align:right;font-size:10px;color:var(--dim);letter-spacing:1px;}
+    #herocap .pts b{display:block;font-size:20px;color:var(--gold);text-shadow:0 0 8px rgba(255,210,63,.5);}
+    /* console panels */
+    form{background:linear-gradient(var(--panel2),var(--panel));border:2px solid var(--line);border-radius:12px;padding:12px;
+      display:flex;flex-direction:column;gap:8px;margin-bottom:14px;box-shadow:inset 0 0 18px rgba(53,224,255,.06);}
+    .lbl{font-size:10px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;}
+    input,textarea,select{font-family:inherit;font-size:13px;padding:9px 11px;border-radius:8px;border:2px solid var(--line);background:#05101d;color:var(--ink);resize:vertical;}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 8px rgba(53,224,255,.3);}
+    textarea{min-height:64px;}
+    button{font-family:inherit;font-size:13px;padding:10px 14px;border-radius:8px;border:2px solid var(--cyan);border-bottom-width:4px;
+      background:#062033;color:var(--cyan);cursor:pointer;font-weight:bold;text-shadow:0 0 6px rgba(53,224,255,.5);}
+    button:disabled{opacity:.5;cursor:default;}
+    button:active{transform:translateY(2px);border-bottom-width:2px;}
+    .proj{background:linear-gradient(var(--panel2),var(--panel));border:2px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+    .proj:hover{border-color:#1e4a6e;}
+    .proj .row{display:flex;align-items:center;gap:8px;}
+    .proj .title{font-weight:bold;font-size:13px;flex:1;}
+    .chip{font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;}
+    .chip.running{background:#2a2410;color:var(--gold);animation:pulse 1.2s ease-in-out infinite;}
+    .chip.done{background:#062a22;color:var(--teal);}
+    .chip.failed{background:#2a1212;color:var(--bad);}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .when{font-size:10px;color:var(--dim);}
+    .report{display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px;font-size:12px;line-height:1.55;white-space:pre-wrap;max-height:420px;overflow-y:auto;color:#cfe4ff;}
+    .proj.open .report{display:block;}
+    .empty{text-align:center;color:var(--dim);font-size:12px;padding:20px;}
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#062033;color:var(--cyan);
+      border:2px solid var(--cyan);border-radius:12px;padding:10px 18px;font-size:13px;display:none;z-index:100;box-shadow:0 0 14px rgba(53,224,255,.4);}
+  </style>
+  <link rel="stylesheet" href="/pixel.css?v=1" />
+  <style>
+    /* ── pixel LIGHT (orange/white) theme ── */
+    body{font-family:var(--font-body)!important;letter-spacing:.5px;background:#fff6ec!important;color:#3a2617!important;}
+    body::after{display:none!important;}
+    h1{font-family:var(--font-title)!important;font-size:15px!important;letter-spacing:1px!important;line-height:1.5;color:#f5793b!important;text-shadow:3px 3px 0 #ffcf9f!important;}
+    #app{max-width:720px;}
+    nav a{border-radius:0!important;border:3px solid #c25e2a!important;box-shadow:3px 3px 0 #c25e2a;font-weight:700;background:#fff!important;color:#b07d4e!important;}
+    nav a:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #c25e2a;}
+    nav a.on{background:#f5793b!important;color:#fff!important;}
+    .lbl{color:#f5793b!important;}
+    input,textarea,select{border-radius:0!important;border:3px solid #c25e2a!important;background:#fff8ef!important;color:#3a2617!important;}
+    form,.proj{border-radius:0!important;box-shadow:none!important;background:#fff!important;border:3px solid #c25e2a!important;color:#3a2617;}
+    .proj .title{color:#3a2617!important;}
+    .report{color:#5a4530!important;border-color:#f4d3ac!important;}
+    .when,.empty{color:#b07d4e!important;}
+    .chip{border-radius:0!important;}
+    .chip.done{background:#e6f6ec!important;color:#2a9d5a!important;}
+    .chip.running{background:#fff2d0!important;color:#c98a2a!important;}
+    button{border-radius:0!important;border:3px solid #c25e2a!important;box-shadow:3px 3px 0 #c25e2a;font-family:var(--font-body);font-weight:700;background:#f5793b!important;color:#fff!important;text-shadow:none!important;}
+    button:disabled{background:#f0d8c4!important;color:#b79a83!important;}
+    button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #c25e2a;}
+    #hero-wrap{border-radius:0!important;box-shadow:none!important;border:3px solid #c25e2a!important;}
+    #herocap .who{font-family:var(--font-title);font-size:12px;line-height:1.5;}
+    #toast{border-radius:0!important;background:#fff!important;color:#f5793b!important;border:3px solid #f5793b!important;box-shadow:3px 3px 0 #c25e2a;}
+    /* ── fit the handheld screen: match the other tabs exactly (no title) ── */
+    header{padding:0!important;margin:0!important;}
+    h1{display:none!important;}
+    nav{margin:6px 0 4px!important;}
+    nav a{font-size:9px!important;padding:4px 5px!important;border-width:2px!important;box-shadow:2px 2px 0 #c25e2a;}
+    #app{padding:4px 10px 8px!important;}
+    #hero-wrap{margin-bottom:6px!important;}
+    form{margin-bottom:0!important;padding:9px!important;gap:6px!important;}
+    textarea{min-height:46px!important;font-size:12px!important;}
+    input,select{font-size:12px!important;padding:7px 9px!important;}
+    button{font-size:12px!important;padding:8px 11px!important;}
+    #tabs{display:flex;gap:6px;margin:0 0 7px;}
+    #tabs .tab{flex:1;font-family:var(--font-body);font-weight:700;font-size:11px;cursor:pointer;
+      background:#fff;color:#b07d4e;border:3px solid #c25e2a;box-shadow:2px 2px 0 #c25e2a;padding:6px 4px;}
+    #tabs .tab.on{background:#f5793b;color:#fff;}
+    .view.hidden{display:none;}
+    #pager{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 6px;}
+    #pager button{font-weight:700;font-size:14px;color:#fff;background:#f5793b;border:3px solid #c25e2a;box-shadow:2px 2px 0 #c25e2a;width:34px;height:30px;padding:0;}
+    #pcounter{font-family:var(--font-title);font-size:10px;color:#c25e2a;min-width:66px;text-align:center;}
+    #projcard{background:#fff;border:3px solid #c25e2a;padding:10px;}
+    #projcard .phead{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+    #projcard .ptitle{font-weight:700;font-size:12px;flex:1;line-height:1.3;}
+    #projcard .pwhen{font-size:9px;color:#b07d4e;margin-bottom:6px;}
+    #projcard .preport{font-size:11px;line-height:1.5;white-space:pre-wrap;color:#5a4530;max-height:190px;overflow-y:auto;border-top:2px solid #f4d3ac;padding-top:7px;}
+    #projcard .pempty{text-align:center;color:#b07d4e;font-size:11px;padding:26px 10px;}
+  </style>
+  <link rel="stylesheet" href="/device.css?v=18" />
+  <script src="/device.js?v=19" defer></script>
+</head>
+<body>
+  <header>
+    <h1>⚛ RESEARCH LAB</h1>
+    <nav><a href="/">🦀 Tank</a><a href="/den.html">🏠 Den</a><a href="/shop.html">🛒 Shop</a><a href="/lab.html" class="on">🧪 Lab</a><a href="/lounge.html">💬 Lounge</a><a href="/dex.html">📖 Dex</a><a href="/clawland.html">🌍 Clawland</a></nav>
+  </header>
+  <div id="app">
+    <div id="hero-wrap">
+      <canvas id="hero" width="480" height="128"></canvas>
+      <div id="herocap">
+        <div>
+          <div class="who" id="who">—'s Lab</div>
+          <div class="sub" id="labstate">booting…</div>
+        </div>
+        <div class="pts">RESEARCH PTS<b id="pts">0</b></div>
+      </div>
+    </div>
+
+    <div id="tabs">
+      <button class="tab on" data-view="new">▸ NEW</button>
+      <button class="tab" data-view="log">▤ LOG (<span id="pcount">0</span>)</button>
+    </div>
+
+    <div id="view-new" class="view">
+      <form id="newproj">
+        <div class="lbl">▸ new research directive</div>
+        <input id="title" placeholder="project title (e.g. 'best DB for our saves')" maxlength="80" />
+        <textarea id="prompt" placeholder="what should the lab figure out? be specific — Claude actually researches it, then writes you a report."></textarea>
+        <select id="researcher" title="who leads this project? their focus stat boosts the reward"></select>
+        <button id="go" type="submit">🔬 RUN RESEARCH (+<span id="rw">100</span> pts)</button>
+      </form>
+    </div>
+
+    <div id="view-log" class="view hidden">
+      <div id="pager"><button id="pprev">◀</button><span id="pcounter">— / —</span><button id="pnext">▶</button></div>
+      <div id="projcard"></div>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let TOKEN = null, POLL = null, OWNER = 'clawde';
+    const REG = {};
+
+    // ---- hero scene: the owned creature paces the sci-fi lab ----
+    const hero = $('hero'), hx = hero.getContext('2d'), HW = hero.width, HH = hero.height;
+    const room = new Image(); let roomOk = false; room.onload = () => roomOk = true; room.src = '/assets/_rooms/lab.png?v=2';
+    let heroSp = null, spr = new Image(), sprOk = false, hf = 0, hclk = 0, hxpos = HW * 0.5, hdir = 1, hlast = 0;
+    function setHeroCreature(ms) { heroSp = ms; sprOk = false; spr = new Image(); spr.onload = () => sprOk = true; spr.src = '/assets/' + ms.sheet + '?v=' + Date.now(); }
+    function heroLoop(ts) {
+      const dt = hlast ? Math.min(64, ts - hlast) : 16; hlast = ts;
+      hx.imageSmoothingEnabled = false; hx.clearRect(0, 0, HW, HH);
+      if (roomOk) { const rs = Math.max(HW / 240, HH / 144), rw = 240 * rs, rh = 144 * rs; hx.drawImage(room, (HW - rw) / 2, HH - rh, rw, rh); }
+      else { hx.fillStyle = '#04070f'; hx.fillRect(0, 0, HW, HH); }
+      if (sprOk && heroSp) {
+        const fw = heroSp.frameW || 48, fr = heroSp.frames || 1, sc = (heroSp.scale || 1.6) * 0.82, dw = fw * sc, dh = fw * sc;
+        const floorY = HH * 0.94, lo = HW * 0.16, hi = HW * 0.84;
+        hxpos += 0.45 * hdir; if (hxpos < lo) { hxpos = lo; hdir = 1; } if (hxpos > hi) { hxpos = hi; hdir = -1; }
+        if (Math.random() < 0.005) hdir *= -1;
+        hclk += dt; if (hclk >= 1000 / (heroSp.fps || 8)) { hclk = 0; hf = (hf + 1) % fr; }
+        const ox = Math.round(hxpos - dw / 2), oy = Math.round(floorY - dh);
+        hx.save();
+        if (hdir > 0) { hx.translate(ox + dw, 0); hx.scale(-1, 1); hx.translate(-ox, 0); }
+        hx.drawImage(spr, (hf % fr) * fw, 0, fw, 48, ox, oy, dw, dh);
+        hx.restore();
+      }
+      requestAnimationFrame(heroLoop);
+    }
+    requestAnimationFrame(heroLoop);
+
+    async function loadOwner() {
+      try {
+        const [spd, st] = await Promise.all([(await fetch('/api/species')).json(), (await fetch('/api/state')).json()]);
+        for (const sp of spd.species) REG[sp.id] = sp;
+        OWNER = st.starter || 'clawde';
+        $('who').textContent = (st.name || 'Your') + "'s Lab";
+        if (st.mainSprite) setHeroCreature(st.mainSprite);
+        const ids = [OWNER, ...(st.roster || [])].filter((id, i, a) => REG[id] && REG[id].artReady && a.indexOf(id) === i);
+        $('researcher').innerHTML = ids.map(id =>
+          `<option value="${id}">${REG[id].emoji} ${REG[id].name} — focus ${REG[id].stats.focus} (+${REG[id].stats.focus * 5} pts)</option>`).join('');
+      } catch {}
+    }
+
+    function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 4000); }
+    function ago(ts) { const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? 'just now' : m < 60 ? m + 'm ago' : Math.round(m / 60) + 'h ago'; }
+
+    // ---- project LOG as a d-pad flipper (one report-card at a time) ----
+    let PROJECTS = [], pi = 0, curView = 'new';
+    const REPORTS = {};
+    let lastDone = new Set();
+
+    async function refresh() {
+      try {
+        const d = await (await fetch('/api/lab/list')).json();
+        $('pts').textContent = d.points; $('rw').textContent = d.reward;
+        $('labstate').textContent = d.running ? '⚡ researching… Claude is on it' : '● online — assign a directive';
+        $('go').disabled = d.running;
+        PROJECTS = d.projects || [];
+        $('pcount').textContent = PROJECTS.length;
+        if (pi >= PROJECTS.length) pi = Math.max(0, PROJECTS.length - 1);
+        if (curView === 'log') renderProj();
+        for (const p of PROJECTS) if (p.status === 'done' && !lastDone.has(p.id) && lastDone.size > 0 && POLL) toast('✅ research complete! +' + (p.reward || 0) + ' pts');
+        lastDone = new Set(PROJECTS.filter(p => p.status === 'done').map(p => p.id));
+        clearInterval(POLL); POLL = setInterval(refresh, d.running ? 5000 : 20000);
+      } catch {}
+    }
+
+    function statusChip(p) {
+      return `<span class="chip ${p.status}">${p.status === 'running' ? '⚡ running' : p.status === 'done' ? '✅ done +' + (p.reward || 0) : '❌ ' + (p.error || 'failed')}</span>`;
+    }
+
+    async function renderProj() {
+      const card = $('projcard');
+      if (!PROJECTS.length) { card.innerHTML = '<div class="pempty">no projects yet — assign a directive in ▸ NEW ⚛</div>'; $('pcounter').textContent = '0 / 0'; return; }
+      const p = PROJECTS[pi];
+      $('pcounter').textContent = (pi + 1) + ' / ' + PROJECTS.length;
+      const who = REG[p.researcher] ? REG[p.researcher].emoji : '🧪';
+      const cached = REPORTS[p.id];
+      const body = cached ? cached.replace(/</g, '&lt;') : (p.status === 'running' ? 'Claude is researching this now…' : 'loading…');
+      card.innerHTML =
+        `<div class="phead"><span class="ptitle">${who} ${p.title.replace(/</g, '&lt;')}</span>${statusChip(p)}</div>` +
+        `<div class="pwhen">${ago(p.createdAt)}</div>` +
+        `<div class="preport">${body}</div>`;
+      if (!cached && p.status !== 'running') {
+        try { const full = await (await fetch('/api/lab/project?id=' + encodeURIComponent(p.id))).json(); REPORTS[p.id] = full.report || full.error || '(no report)'; }
+        catch { REPORTS[p.id] = '(failed to load)'; }
+        if (curView === 'log' && PROJECTS[pi] && PROJECTS[pi].id === p.id) card.querySelector('.preport').textContent = REPORTS[p.id];
+      }
+    }
+
+    function setView(v) {
+      curView = v;
+      $('view-new').classList.toggle('hidden', v !== 'new');
+      $('view-log').classList.toggle('hidden', v !== 'log');
+      document.querySelectorAll('#tabs .tab').forEach(t => t.classList.toggle('on', t.dataset.view === v));
+      if (v === 'log') renderProj();
+    }
+    document.querySelectorAll('#tabs .tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
+    $('pprev').addEventListener('click', () => { if (PROJECTS.length) { pi = (pi - 1 + PROJECTS.length) % PROJECTS.length; renderProj(); } });
+    $('pnext').addEventListener('click', () => { if (PROJECTS.length) { pi = (pi + 1) % PROJECTS.length; renderProj(); } });
+
+    // physical d-pad: up/down flips NEW ↔ LOG · left/right flips through projects
+    window.addEventListener('cb-nav', (e) => {
+      if (e.detail === 'up' || e.detail === 'down') { e.preventDefault(); setView(curView === 'new' ? 'log' : 'new'); }
+      else if (curView === 'log' && e.detail === 'left') { e.preventDefault(); $('pprev').click(); }
+      else if (curView === 'log' && e.detail === 'right') { e.preventDefault(); $('pnext').click(); }
+    });
+    // A button: run the research directive (NEW view)
+    window.addEventListener('cb-a', (e) => {
+      if (curView === 'new' && !$('go').disabled) { e.preventDefault(); $('newproj').requestSubmit(); }
+    });
+
+    $('newproj').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = $('title').value.trim(), prompt = $('prompt').value.trim();
+      if (!prompt) return toast('describe the project first!');
+      if (!TOKEN) { try { TOKEN = (await (await fetch('/api/lab/token')).json()).token; } catch { return toast('server unreachable'); } }
+      try {
+        const r = await fetch('/api/lab/start', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': TOKEN }, body: JSON.stringify({ title, prompt, researcher: $('researcher').value }) });
+        const d = await r.json();
+        if (d.error) return toast('⚠ ' + d.error);
+        $('title').value = ''; $('prompt').value = '';
+        toast('🔬 directive accepted — research underway!');
+        pi = 0; await refresh(); setView('log');
+      } catch { toast('failed to start'); }
+    });
+
+    loadOwner().then(refresh);
+  </script>
+</body>
+</html>
