@@ -1,6 +1,10 @@
 {
   "name": "claudemon-plugins",
   "owner": { "name": "OriginalName457", "url": "https://github.com/OriginalName457" },
+  "metadata": {
+    "description": "Claudemon — a pixel-pet companion + Clawland game, delivered as a Claude Code plugin.",
+    "version": "1.0.0"
+  },
   "plugins": [
     {
       "name": "claudemon",
