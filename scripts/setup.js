@@ -60,8 +60,12 @@ function tryInstallClaude() {
 function registerMcp(claudeBin) {
   const server = path.join(__dirname, '..', 'src', 'server.js');
   say('\n   Registering the Claudemon MCP server…');
-  const cmd = `"${claudeBin}" mcp add claudemon -s user -- node "${server}"`;
-  const r = spawnSync(cmd, { stdio: QUIET ? 'ignore' : 'inherit', shell: true });
+  // Arg-array form: no interpolated command string (nothing to inject), and spaces in
+  // paths are handled by spawn itself. Windows .cmd/.bat shims can't launch without a
+  // shell, so opt one in narrowly just for those; the native binary needs no shell.
+  const cmdArgs = ['mcp', 'add', 'claudemon', '-s', 'user', '--', 'node', server];
+  const useShell = win && /\.(cmd|bat)$/i.test(claudeBin);
+  const r = spawnSync(claudeBin, cmdArgs, { stdio: QUIET ? 'ignore' : 'inherit', shell: useShell });
   if (r.status === 0) { say('   ✓ MCP server registered — your tank auto-starts at http://localhost:4573'); return true; }
   warn('   ⚠ `claude mcp add` didn’t succeed (it may already be registered).');
   warn('     To redo it:  claude mcp remove claudemon   then   npm run setup');
