@@ -16,7 +16,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Scan plugin
         uses: hashgraph-online/ai-plugin-scanner-action@9039bbe1164fb39aa410e65d3e90a400c464b081 # v1.2.518
         with:
